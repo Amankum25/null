@@ -59,7 +59,7 @@ const initialState: StoreState = {
 function serviceFor(serviceId: string): Service | undefined { return serviceCatalog.find((service) => service.id === serviceId) }
 function now() { return new Date().toISOString() }
 function createId() { return `app-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}` }
-function initialDocuments(service: Service): DocumentItem[] { return (service.documents ?? []).map((name, index) => ({ id: `${service.id}-doc-${index}`, name, type: "PDF / JPG", status: index === 0 ? "verified" : "pending" })) }
+function initialDocuments(service: Service): DocumentItem[] { return (service.documents ?? []).map((name, index) => ({ id: `${service.id}-doc-${index}`, name, type: "PDF / JPG", status: "pending" })) }
 
 function sanitizePersistedState(value: unknown): StoreState {
   if (!value || typeof value !== "object") return initialState
