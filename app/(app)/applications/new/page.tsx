@@ -1,10 +1,87 @@
 "use client"
 
-import { useRouter } from "next/navigation"
-import { useEffect, useState } from "react"
+import Link from "next/link"
 import { ArrowRight, Search } from "lucide-react"
-import { serviceCatalog, type ServiceCategory } from "@/src/data/serviceCatalog"
-import { useCivicFlow } from "@/lib/civicflow-store"
-import { Button, Card, PageHeader, Status } from "@/components/page-primitives"
+import { useState } from "react"
+import { PageHeader, Card } from "@/components/page-primitives"
+import { categoryMeta, serviceCatalog, type ServiceCategory } from "@/src/data/serviceCatalog"
+import { CategoryIcon } from "@/components/service-catalog"
 
-export default function NewApplicationPage() { const router = useRouter(); const { createApplication } = useCivicFlow(); const [requested, setRequested] = useState<string | null>(null); const [scholarship, setScholarship] = useState<string | null>(null); const [category, setCategory] = useState<ServiceCategory | "all">("all"); const [query, setQuery] = useState(""); useEffect(() => { const params = new URLSearchParams(window.location.search); setRequested(params.get("service")); setScholarship(params.get("scholarship")) }, []); const services = serviceCatalog.filter((service) => service.status === "available" && (category === "all" || service.category === category) && `${service.title} ${service.description}`.toLowerCase().includes(query.toLowerCase())); const start = (serviceId: string) => { const application = createApplication(serviceId, { scholarshipId: scholarship ?? undefined }); if (application) router.push(`/applications/${application.id}/workspace`) }; return <><PageHeader eyebrow="New application" title="What service do you need?" description="Choose an available government service. Each choice creates its own workspace and progress." /><Card className="mb-5"><div className="flex flex-col gap-3 md:flex-row"><label className="relative flex-1"><span className="sr-only">Search available services</span><Search className="absolute left-3 top-3 size-4 text-slate-400" /><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search available services..." className="h-11 w-full rounded-xl border border-slate-200 py-2.5 pl-9 pr-3 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100" /></label><select value={category} onChange={(event) => setCategory(event.target.value as ServiceCategory | "all")} className="h-11 rounded-xl border border-[#d9e2ef] bg-white px-3 py-2.5 text-sm text-slate-900 [color-scheme:light] focus:border-blue-500 focus:ring-2 focus:ring-blue-100"><option value="all">All categories</option><option value="education">Education</option><option value="certificates">Certificates</option><option value="licenses">Licenses</option><option value="benefits">Benefits</option><option value="registrations">Registrations</option><option value="other">Other</option></select></div><p className="mt-3 text-xs text-slate-500">{services.length} guided application{services.length === 1 ? "" : "s"} available in this view.</p></Card>{services.length ? <div className="grid gap-5 md:grid-cols-2">{services.map((service) => <Card key={service.id} className="flex flex-col"><div className="flex items-start justify-between gap-3"><div><Status tone="green">Available</Status><h2 className="mt-3 text-lg font-bold">{service.title}</h2><p className="mt-2 text-sm text-slate-500">{service.description}</p></div></div><p className="mt-4 text-xs text-slate-500">{service.department} · {service.jurisdiction}</p><div className="mt-auto pt-5"><Button onClick={() => start(service.id)}>Start application<ArrowRight className="ml-2 size-4" /></Button></div></Card>)}</div> : <Card className="text-center"><p className="font-semibold">No guided applications are available in this category yet.</p><p className="mt-2 text-sm text-slate-500">You can still browse upcoming and information-only services in the complete directory.</p><Button href="/services" variant="secondary" className="mt-5">Explore complete service directory</Button></Card>}{requested && !services.some((service) => service.id === requested) && <p className="mt-4 text-xs text-slate-500">The requested service is not currently available for guided applications.</p>}</> }
+const categories: ServiceCategory[] = ["education", "certificates", "licenses", "benefits", "registrations", "other"]
+
+export default function NewApplicationPage() {
+  const [query, setQuery] = useState("")
+  const shown = query
+    ? serviceCatalog.filter((item) => `${item.title} ${item.description}`.toLowerCase().includes(query.toLowerCase()))
+    : []
+
+  return (
+    <>
+      <PageHeader
+        eyebrow="New application"
+        title="What service do you need?"
+        description="Choose any government or public-service process. CivicFlow will guide you through it."
+      />
+
+      <div className="relative mb-7 max-w-3xl">
+        <Search className="absolute left-4 top-3.5 size-5 text-slate-400" />
+        <input
+          value={query}
+          onChange={(event) => setQuery(event.target.value)}
+          placeholder="Search for certificates, scholarships, licenses, subsidies..."
+          className="w-full rounded-2xl border border-slate-200 bg-white px-12 py-3.5 text-sm shadow-sm outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
+          aria-label="Search government services"
+        />
+        {shown.length > 0 && (
+          <div className="absolute inset-x-0 top-14 z-10 rounded-2xl border border-slate-200 bg-white p-2 shadow-xl">
+            {shown.map((service) => (
+              <Link
+                key={service.id}
+                href={`/services/${service.id}`}
+                className="flex items-center justify-between rounded-xl px-3 py-3 hover:bg-blue-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+              >
+                <span>
+                  <strong className="block text-sm">{service.title}</strong>
+                  <span className="text-xs text-slate-500">{categoryMeta[service.category].label}</span>
+                </span>
+                <ArrowRight className="size-4 text-blue-600" />
+              </Link>
+            ))}
+          </div>
+        )}
+      </div>
+
+      <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+        {categories.map((category) => {
+          const meta = categoryMeta[category]
+          const count = serviceCatalog.filter((service) => service.category === category).length
+
+          return (
+            <Link
+              key={category}
+              href={category === "other" ? "/services" : `/services?category=${category}`}
+              className="group block h-full rounded-2xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
+            >
+              <Card className="h-full transition duration-200 group-hover:-translate-y-1 group-hover:border-blue-300 group-hover:shadow-md">
+                <div className="flex items-start justify-between">
+                  <div className="grid size-12 place-items-center rounded-2xl bg-blue-50 text-blue-600">
+                    <CategoryIcon category={category} />
+                  </div>
+                  <ArrowRight className="size-5 text-slate-300 transition group-hover:text-blue-600" />
+                </div>
+                <h2 className="mt-5 text-lg font-bold">{meta.label}</h2>
+                <p className="mt-2 text-sm leading-6 text-slate-500">{meta.description}</p>
+                {count > 0 && (
+                  <p className="mt-4 text-xs font-semibold text-blue-600">{count} listed services</p>
+                )}
+                <span className="mt-5 inline-flex text-sm font-semibold text-blue-600">
+                  Explore services <ArrowRight className="ml-2 size-4" />
+                </span>
+              </Card>
+            </Link>
+          )
+        })}
+      </div>
+    </>
+  )
+}
