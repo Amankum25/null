@@ -1,6 +1,6 @@
 'use client'
 
-import { Fragment, useState, type ReactNode } from 'react'
+import React, { Fragment, useState, type ReactNode } from 'react'
 import { ArrowRight, Bot, Check, ChevronDown, ChevronRight, CircleAlert, CloudUpload, FileCheck2, FileText, GraduationCap, Home, Landmark, MessageCircle, Search, Send, ShieldCheck, Upload, UserRound } from 'lucide-react'
 
 const steps = [
