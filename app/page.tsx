@@ -1,95 +1,48 @@
 'use client'
 
 import { useState } from 'react'
-import {
-  ArrowRight, Bell, BookOpen, BriefcaseBusiness, Check, ChevronDown, ChevronRight,
-  CircleHelp, ClipboardCheck, Clock3, FileCheck2, FileText, FolderOpen, GraduationCap,
-  Home, Landmark, LayoutDashboard, LifeBuoy, ListChecks, Menu, MessageSquareText,
-  MoreHorizontal, Paperclip, Plus, Search, Send, Settings, ShieldCheck, Sparkles,
-  Upload, UserRound, WalletCards, X, Zap,
-} from 'lucide-react'
+import { ArrowLeft, ArrowRight, Check, ChevronDown, CircleCheck, CircleX, CloudUpload, FileText, GraduationCap, Landmark, Menu, Paperclip, Send, Settings, ShieldCheck, Upload, UserRound } from 'lucide-react'
 
-const nav = [
-  { label: 'Dashboard', icon: LayoutDashboard },
-  { label: 'AI Assistant', icon: Sparkles },
-  { label: 'Explore services', icon: CompassIcon },
-  { label: 'My applications', icon: ClipboardCheck },
-  { label: 'Documents', icon: FolderOpen },
-  { label: 'Approvals', icon: FileCheck2 },
-]
-const tools = [
-  { label: 'My profile', icon: UserRound },
-  { label: 'Notifications', icon: Bell },
-  { label: 'Settings', icon: Settings },
-]
-const services = [
-  { title: 'Scholarships', desc: 'Find financial support for your education', icon: GraduationCap, tone: 'blue' },
-  { title: 'Certificates', desc: 'Get income, caste & domicile certificates', icon: FileText, tone: 'teal' },
-  { title: 'Licenses', desc: 'Apply for and renew official licenses', icon: BriefcaseBusiness, tone: 'purple' },
-  { title: 'Subsidies', desc: 'Discover benefits you may be eligible for', icon: WalletCards, tone: 'amber' },
-]
-const applications = [
-  { name: 'Post-Matric Scholarship', id: 'CF-2024-0892', status: 'In progress', progress: 68, updated: 'Updated 2 hours ago', icon: GraduationCap, color: '#3478e5' },
-  { name: 'Income Certificate', id: 'CF-2024-0817', status: 'Needs review', progress: 42, updated: 'Updated yesterday', icon: FileText, color: '#277b78' },
-]
-
-function CompassIcon(props: any) { return <LifeBuoy {...props} /> }
+const steps = ['Dashboard', 'Conversational Assistant', 'Scholarship Selection', 'Eligibility Check', 'Document Upload', 'Live Form Filling', 'Final Review', 'Approval & Declaration', 'Submission Success & Tracking']
+const docs = ['Aadhaar Card', 'Caste Certificate', 'Income Certificate', 'Previous Marksheet', 'Admission Proof', 'Bank Account Details']
 
 export default function Page() {
-  const [active, setActive] = useState('Dashboard')
-  const [query, setQuery] = useState('')
+  const [activeStep, setActiveStep] = useState(0)
+  const [message, setMessage] = useState('')
   const [sent, setSent] = useState(false)
-  const [menuOpen, setMenuOpen] = useState(false)
+  const [uploaded, setUploaded] = useState(false)
 
-  return (
-    <div className="app-shell">
-      <aside className={menuOpen ? 'sidebar sidebar-open' : 'sidebar'}>
-        <div className="brand">
-          <div className="brand-mark"><Landmark size={20} /></div>
-          <div><div className="brand-name">CivicFlow</div><div className="brand-sub">Public service assistant</div></div>
-          <button className="mobile-close" onClick={() => setMenuOpen(false)} aria-label="Close navigation"><X size={18} /></button>
-        </div>
-        <div className="side-label">Workspace</div>
-        <nav className="nav-list">
-          {nav.map(item => { const Icon = item.icon; return <button key={item.label} className={active === item.label ? 'nav-item active' : 'nav-item'} onClick={() => {setActive(item.label); setMenuOpen(false)}}><Icon size={18} /><span>{item.label}</span>{item.label === 'Approvals' && <span className="nav-count">2</span>}</button> })}
-        </nav>
-        <div className="side-label side-label-tools">Account</div>
-        <nav className="nav-list">
-          {tools.map(item => { const Icon = item.icon; return <button key={item.label} className="nav-item" onClick={() => setActive(item.label)}><Icon size={18} /><span>{item.label}</span>{item.label === 'Notifications' && <span className="dot" />}</button> })}
-        </nav>
-        <div className="sidebar-bottom">
-          <div className="help-card"><div className="help-icon"><CircleHelp size={17}/></div><div><strong>Need help?</strong><span>Talk to CivicFlow AI</span></div><ChevronRight size={15}/></div>
-          <div className="profile-row"><div className="avatar">AS</div><div className="profile-copy"><strong>Aarav Sharma</strong><span>Citizen account</span></div><MoreHorizontal size={18} className="muted-icon"/></div>
-        </div>
-      </aside>
+  return <main className="journey-shell">
+    <header className="journey-topbar">
+      <div className="brand"><span className="brand-mark"><Landmark /></span><strong>CivicFlow</strong><span className="brand-pill">Scholarship journey</span></div>
+      <div className="top-user"><span>Preview workspace</span><div className="user-avatar">AP</div><ChevronDown /></div>
+    </header>
+    <div className="journey-grid">
+      <Panel number={1} title="Dashboard" subtitle="Clean card-based layout with quick actions" active={activeStep === 0} onClick={() => setActiveStep(0)}>
+        <div className="dash-layout"><div className="mini-sidebar"><strong><Landmark /> CivicFlow</strong><span className="mini-active">⌂ Home</span><span>▣ New Application</span><span>▤ My Applications</span><span>▧ Documents</span><span>◉ AI Assistant</span><span>⚙ Settings</span><div className="mini-profile"><div className="user-avatar">AP</div><span>Aarav Patil<br /><small>Student</small></span></div></div><div className="dash-main"><div className="dash-hero"><strong>Good morning, Aarav</strong><span>Your AI-powered public service assistant</span><div className="dash-search">⌕ Search for services (e.g., scholarship, certificate, license...)</div></div><div className="quick-grid">{[['🎓','Scholarships','Apply for government scholarships'],['▣','Certificates','Income, caste, domicile etc.'],['▣','Licenses','Driving, trade, business etc.'],['▣','Subsidies','Apply for government subsidies']].map(x => <div className="quick-card" key={x[1]}><b>{x[0]}</b><strong>{x[1]}</strong><span>{x[2]}</span></div>)}</div><strong className="mini-heading">Your Applications</strong><div className="mini-apps">{[['Post-Matric Scholarship','In Progress','75%'],['Income Certificate','Completed','100%'],['Driving License Renewal','Draft','20%']].map(x => <div className="mini-app" key={x[0]}><strong>{x[0]}</strong><span>{x[1]}</span><div className="mini-bar"><i style={{width:x[2]}} /></div><small>{x[2]}</small></div>)}</div></div></div>
+      </Panel>
 
-      <main className="main-area">
-        <header className="topbar">
-          <button className="menu-btn" onClick={() => setMenuOpen(true)} aria-label="Open navigation"><Menu size={20}/></button>
-          <div className="breadcrumbs"><span>Workspace</span><ChevronRight size={14}/><strong>Dashboard</strong></div>
-          <div className="top-actions"><button className="icon-btn" aria-label="Search"><Search size={19}/></button><button className="icon-btn notification" aria-label="Notifications"><Bell size={19}/><span /></button><button className="icon-btn" aria-label="Help"><CircleHelp size={19}/></button><div className="top-avatar">AS</div></div>
-        </header>
-        <div className="content">
-          <section className="welcome-row"><div><div className="eyebrow"><span className="eyebrow-dot"/> YOUR PERSONAL SERVICE DESK</div><h1>Welcome back, Aarav</h1><p>Your public-service tasks, all in one place.</p></div><button className="outline-btn"><Clock3 size={16}/> View activity</button></section>
+      <Panel number={2} title="Conversational Assistant" subtitle="Chat-style interaction with service recommendations" active={activeStep === 1} onClick={() => setActiveStep(1)}><div className="chat-head"><div className="bot-avatar">◉</div><strong>CivicFlow AI</strong><span className="online">● Online</span><button>♧ Clear chat</button></div><div className="chat-body"><div className="bubble user">I want to apply for a post-matric scholarship in Maharashtra.<br />Help me with the complete process.<small>10:02 AM</small></div><div className="bubble ai">I can help you with that!<br /><span>I’ll find the relevant scholarships, check your eligibility, and guide you through the complete application process.</span></div><div className="recommend"><strong>Based on your profile, here are the best matching schemes:</strong><div className="rec-grid"><SchemeCard title="Post-Matric Scholarship" match="95% match" /><SchemeCard title="Merit Scholarship" match="78% match" /></div></div></div><Composer value={message} onChange={setMessage} onSend={() => setSent(true)} /><div className="chat-status">{sent ? 'Message sent. CivicFlow is preparing recommendations.' : 'Ask about documents, eligibility, or application status.'}</div></Panel>
 
-          <section className="hero-card">
-            <div className="hero-copy"><div className="sparkle"><Sparkles size={17}/></div><div><h2>What can I help you with?</h2><p>Describe a government service you need. I’ll help you understand the requirements and get started.</p></div></div>
-            <div className="prompt-box"><input value={query} onChange={e => setQuery(e.target.value)} onKeyDown={e => {if(e.key === 'Enter') setSent(true)}} placeholder="Tell CivicFlow what you need help with..." aria-label="Ask CivicFlow"/><button className="attach" aria-label="Attach a file"><Paperclip size={18}/></button><button className="send-btn" onClick={() => setSent(true)} aria-label="Send message"><Send size={17}/></button></div>
-            {sent && <div className="sent-note"><Check size={15}/> Got it — I’ll help you explore that service. <button onClick={() => setSent(false)}>Dismiss</button></div>}
-            <div className="suggestions"><span>Try asking</span><button onClick={() => setQuery('Find scholarships I may be eligible for')}>Find scholarships</button><button onClick={() => setQuery('I need an income certificate')}>Income certificate</button><button onClick={() => setQuery('Help me renew my driving license')}>Renew a license</button></div>
-          </section>
+      <Panel number={3} title="Scholarship Selection" subtitle="Compare schemes in modern cards" active={activeStep === 2} onClick={() => setActiveStep(2)}><div className="selection-toolbar"><button>← Back to search</button><span>State⌄</span><span>Education Level⌄</span><span>Category⌄</span></div><h3>Scholarships for you</h3><p className="muted">Based on your profile and eligibility</p><div className="scholar-grid"><ScholarshipCard title="Post-Matric Scholarship" org="Maharashtra Government" match="95%" best /><ScholarshipCard title="Merit Scholarship" org="State Education Department" match="78%" /><ScholarshipCard title="Minority Scholarship" org="Maharashtra Minority Department" match="68%" /></div></Panel>
 
-          <section className="section-block"><div className="section-heading"><div><h2>Explore services</h2><p>Start with a popular public-service category</p></div><button className="text-btn" onClick={() => setActive('Explore services')}>View all <ArrowRight size={15}/></button></div><div className="service-grid">{services.map(({title, desc, icon: Icon, tone}) => <button className="service-card" key={title} onClick={() => setActive('Explore services')}><div className={'service-icon '+tone}><Icon size={20}/></div><div className="service-text"><h3>{title}</h3><p>{desc}</p></div><ChevronRight size={17} className="card-arrow"/></button>)}</div></section>
+      <Panel number={4} title="Eligibility Check" subtitle="Clear checklist with status indicators" active={activeStep === 3} onClick={() => setActiveStep(3)}><div className="status-banner"><GraduationCap /><div><strong>Post-Matric Scholarship</strong><span>Eligibility checked based on your profile</span></div><b>● Likely Eligible</b></div><div className="eligibility"><div><strong>Criteria</strong><strong>Your Status</strong>{[['Education level (UG/PG)','Matched'],['State / Domicile (Maharashtra)','Matched'],['Category (OBC)','Matched'],['Family income limit (< ₹2.5 Lakh)','Needs verification'],['Academic performance','Matched']].map(([a,b]) => <div className="elig-row" key={a}><span>{a}</span><span className={b.startsWith('Needs') ? 'warn' : 'success'}>{b.startsWith('Needs') ? '✦' : '●'} {b}</span></div>)}</div><div className="required"><strong>Required Documents <small>5 of 6 ready</small></strong>{docs.map((d,i) => <span key={d}><CircleCheck className={i === 2 || i === 5 ? 'warn-icon' : ''} />{d}<small>{i === 2 || i === 5 ? 'Pending' : 'Uploaded'}</small></span>)}</div></div><div className="info-note">ⓘ You are likely eligible for this scholarship. Please upload the pending documents to proceed.</div></Panel>
 
-          <section className="stats-grid">{[['Active applications','2','+1 this month',ClipboardCheck,'blue'],['Pending approvals','2','Needs your attention',ShieldCheck,'amber'],['Completed tasks','12','+4 this month',Check,'green'],['Documents uploaded','8','All verified',FileCheck2,'purple']].map(([label, value, meta, Icon, tone]) => <div className="stat-card" key={label as string}><div className={'stat-icon '+tone}><Icon size={18}/></div><div><div className="stat-label">{label as string}</div><div className="stat-value">{value as string}</div><div className="stat-meta">{meta as string}</div></div><ChevronRight size={16} className="stat-arrow"/></div>)}</section>
+      <Panel number={5} title="Document Upload" subtitle="Drag & drop with preview and extraction" active={activeStep === 4} onClick={() => setActiveStep(4)}><div className="upload-layout"><div className="doc-list"><strong>Upload Documents <small>(5 of 6 ready)</small></strong>{docs.map((d,i) => <div className="doc-item" key={d}><FileText /><span>{d}<small>{i === 2 || i === 5 ? 'PDF, JPG (Max 5MB)' : 'PDF, JPG (Max 5MB)'}</small></span><b className={i === 2 || i === 5 ? 'warn' : ''}>{i === 2 || i === 5 ? '!' : '✓'}</b></div>)}</div><button className="dropzone" onClick={() => setUploaded(true)}><CloudUpload /><strong>Drag & drop your file here</strong><span>or</span><b>Choose file</b><small>PDF, JPG, PNG (Max 5MB)</small></button><div className="extract"><strong>Extracted Information (AI) <small>✎ Edit</small></strong>{[['Applicant Name','Aarav Patil'],["Father's Name",'Rajesh Patil'],['Annual Income','₹2,00,000'],['Issue Date','12 Jun 2024']].map(x => <label key={x[0]}>{x[0]}<input value={x[1]} readOnly /></label>)}<span className="verified">● Information extracted using AI. Please verify.</span><button className="primary">Confirm & Save</button>{uploaded && <small className="upload-success">Document ready for review.</small>}</div></div></Panel>
 
-          <section className="lower-grid"><div className="panel applications"><div className="panel-head"><div><h2>My applications</h2><p>Keep track of your active service requests</p></div><button className="icon-btn small"><Plus size={17}/></button></div><div className="application-list">{applications.map(app => {const Icon = app.icon; return <div className="application-row" key={app.id}><div className="app-icon" style={{background: app.color+'14', color: app.color}}><Icon size={19}/></div><div className="app-main"><div className="app-title-row"><strong>{app.name}</strong><span className={app.status === 'Needs review' ? 'status amber-status' : 'status blue-status'}>{app.status}</span></div><div className="app-id">{app.id} <span>•</span> {app.updated}</div><div className="progress-line"><div><span style={{width: app.progress+'%', background: app.color}}/></div><b>{app.progress}%</b></div></div><ChevronRight size={17} className="muted-icon"/></div>})}</div><button className="panel-footer" onClick={() => setActive('My applications')}>View all applications <ArrowRight size={15}/></button></div>
-          <div className="panel activity"><div className="panel-head"><div><h2>Recent activity</h2><p>Your latest CivicFlow updates</p></div><button className="text-btn">See all</button></div><div className="activity-list"><Activity icon={Check} color="green" title="Document verified" detail="Income certificate was verified" time="Today, 10:24 AM"/><Activity icon={MessageSquareText} color="purple" title="AI assistant paused" detail="Waiting for your approval" time="Yesterday, 4:16 PM"/><Activity icon={Upload} color="blue" title="Document uploaded" detail="Aarav_Sharma_Marksheet.pdf" time="Mon, 2:08 PM"/></div></div></section>
-          <div className="demo-disclaimer"><ShieldCheck size={15}/><span><strong>Demonstration workspace.</strong> CivicFlow is showing sample data for this prototype. No government portal activity or submission is taking place.</span></div>
-        </div>
-      </main>
+      <Panel number={6} title="Live Form Filling (Split View)" subtitle="Embedded browser + AI activity monitor" active={activeStep === 5} onClick={() => setActiveStep(5)}><div className="split-view"><div className="form-steps"><span className="done">✓ Login<br /><small>Completed</small></span><span className="current">2&nbsp; Fill Form<br /><small>In Progress</small></span><span>3&nbsp; Upload Documents<br /><small>Pending</small></span><span>4&nbsp; Review<br /><small>Pending</small></span><span>5&nbsp; Submit<br /><small>Pending</small></span></div><div className="mock-form"><small>https://postmatric.maharashtra.gov.in/application</small><strong>Maharashtra Government<br /><em>Student Scholarship Portal</em></strong><div className="form-tabs">1. Personal Details　 2. Education Details　 3. Documents　 4. Review</div><h3>Personal Details</h3><label>Applicant Name *<input value="Aarav Patil" readOnly /></label><label>Date of Birth *<input value="12/03/2004" readOnly /></label><label>Gender *<input value="Male" readOnly /></label></div><div className="ai-monitor"><strong>AI Activity <span>● Running</span></strong>{['Opening application page','Identifying form fields','Filling personal details','Selecting education details','Uploading documents','Validating information','Waiting for your review'].map((x,i) => <span className={i === 2 ? 'active-line' : i < 2 ? 'done-line' : ''} key={x}>{i < 2 ? '✓' : i === 2 ? '●' : '○'} {x}</span>)}<button className="pause">Ⅱ Pause AI</button><button className="control">▣ Take Control</button></div></div></Panel>
+
+      <Panel number={7} title="Final Review" subtitle="Complete summary before submission" active={activeStep === 6} onClick={() => setActiveStep(6)}><div className="review-head"><strong>♙ Application Review</strong><span>Please verify all details before submission</span><button>✎ Edit Information</button></div><div className="review-grid">{[['Applicant Details','Aarav Patil','12 Mar 2004','OBC','Maharashtra'],['Education Details','B.Tech (2024–2028)','Y2 Institute of Technology','Pune, Maharashtra'],['Financial Details','Annual Income','₹2,00,000','Bank Account','XXXX 1234'],['Documents','5 of 6 uploaded','✓ All documents verified','✓ Aadhaar Card','✓ Caste Certificate']].map(x => <div className="review-card" key={x[0]}><strong>{x[0]}</strong>{x.slice(1).map(v => <span key={v}>{v}</span>)}</div>)}</div><div className="confirm-line">✓ I have reviewed all the information and confirm it is correct. I have read and understood the declaration on the official portal.</div></Panel>
+
+      <Panel number={8} title="Approval & Declaration" subtitle="User consent before submission" active={activeStep === 7} onClick={() => setActiveStep(7)}><div className="important"><CircleX /> <strong>Important</strong><span>Please read the official declaration shown on the government website.<br />You must personally confirm and accept it.</span></div><div className="checks">{['I have verified all personal and educational details.','I have checked all uploaded documents.','I have read and agree to the official declaration.'].map(x => <label key={x}><input type="checkbox" defaultChecked />{x}</label>)}</div><button className="primary big">➤ Authorize Submission</button><p className="muted center">You can also submit manually on the website.</p></Panel>
+
+      <Panel number={9} title="Submission Success & Tracking" subtitle="Confirmation with next steps" active={activeStep === 8} onClick={() => setActiveStep(8)}><div className="success-banner"><CircleCheck /><strong>Application Submitted Successfully!</strong><span>Your scholarship application has been submitted to the Maharashtra Government.</span></div><div className="tracking"><div><span>Application Reference No.</span><strong>MH2025SCH123456</strong><span>Submission Date</span><strong>12 Aug 2025, 10:45 AM</strong><span>Scheme</span><strong>Post-Matric Scholarship</strong><span>Status</span><b>● Submitted</b></div><div><strong>Next Steps</strong>{['Track application status using the reference number','Check for additional document requests','Wait for government verification','You will be notified about the final decision'].map((x,i) => <span key={x}><i>{i+1}</i>{x}</span>)}<button className="control">↗ Track on Official Portal</button></div></div></Panel>
     </div>
-  )
+    <footer>Prototype journey board · Select any step to focus the workflow · <ShieldCheck /> No real government submission occurs</footer>
+  </main>
 }
 
-function Activity({icon: Icon, color, title, detail, time}: {icon: any, color: string, title: string, detail: string, time: string}) { return <div className="activity-row"><div className={'activity-icon '+color}><Icon size={15}/></div><div className="activity-copy"><strong>{title}</strong><span>{detail}</span></div><time>{time}</time></div> }
+function Panel({number,title,subtitle,children,active,onClick}: any) { return <section className={'journey-panel '+(active ? 'panel-active' : '')} onClick={onClick}><div className="panel-title"><span className="step-number">{number}</span><div><h2>{title}</h2><p>{subtitle}</p></div></div><div className="panel-card">{children}</div></section> }
+function SchemeCard({title,match}: any) { return <div className="scheme-card"><GraduationCap /><strong>{title}</strong><small>Maharashtra Government</small><b>● {match}</b><button>View details →</button></div> }
+function ScholarshipCard({title,org,match,best}: any) { return <div className={'scholar-card '+(best ? 'best' : '')}><div className="scholar-top"><GraduationCap /><b>{best ? '★ Best match' : '◉ '+match+' match'}</b></div><strong>{title}</strong><span>{org}</span><p>{best ? 'Financial assistance for SC, ST, OBC and other eligible students.' : 'For meritorious students with excellent academic record.'}</p>{['UG & PG students','Maharashtra domicile','Income criteria applies'].map(x => <small key={x}>● {x}</small>)}<button className="primary">Select this scheme</button></div> }
+function Composer({value,onChange,onSend}: any) { return <div className="composer"><Paperclip /><input aria-label="Ask CivicFlow" value={value} onChange={e => onChange(e.target.value)} placeholder="Ask anything about the application..." onKeyDown={e => { if (e.key === 'Enter' && !e.nativeEvent.isComposing && e.keyCode !== 229) onSend() }} /><button aria-label="Send message" onClick={onSend}><Send /></button></div> }
