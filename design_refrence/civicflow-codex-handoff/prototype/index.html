@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>CivicFlow — Codex Design Prototype</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar" aria-label="Primary navigation">
+      <a class="brand" href="#dashboard" aria-label="CivicFlow dashboard"><span class="brand-mark">❧</span><span>Civic<span>Flow</span></span></a>
+      <nav class="side-nav">
+        <a href="#dashboard" data-page="dashboard" class="nav-item active"><span>⌂</span>Dashboard</a>
+        <a href="#new-application" data-page="new-application" class="nav-item"><span>＋</span>New Application</a>
+        <a href="#services" data-page="services" class="nav-item"><span>▦</span>Explore Services</a>
+        <a href="#applications" data-page="applications" class="nav-item"><span>▤</span>My Applications</a>
+        <a href="#documents" data-page="documents" class="nav-item"><span>▧</span>Documents</a>
+        <a href="#approvals" data-page="approvals" class="nav-item"><span>☑</span>Approvals</a>
+        <a href="#assistant" data-page="assistant" class="nav-item"><span>✧</span>AI Assistant</a>
+        <a href="#notifications" data-page="notifications" class="nav-item"><span>♧</span>Notifications <i class="dot"></i></a>
+        <a href="#settings" data-page="settings" class="nav-item"><span>⚙</span>Settings</a>
+      </nav>
+      <div class="sidebar-foot"><span class="shield">✓</span><span><b>Your data stays yours</b><small>Citizen-controlled assistance</small></span></div>
+    </aside>
+
+    <main class="main-area">
+      <header class="topbar">
+        <label class="global-search"><span>⌕</span><input id="globalSearch" placeholder="Search services, applications..." aria-label="Search services and applications" /></label>
+        <div class="top-actions">
+          <div class="menu-wrap">
+            <button class="top-menu-btn" data-menu="newMenu" aria-expanded="false">＋ New Application <span>⌄</span></button>
+            <div class="dropdown" id="newMenu" hidden>
+              <small>START BY CATEGORY</small>
+              <a href="#services?category=education-scholarships">🎓 Education & Scholarships</a>
+              <a href="#services?category=certificates">▣ Certificates</a>
+              <a href="#services?category=licenses-permits">▤ Licenses & Permits</a>
+              <a href="#services?category=benefits-subsidies">♡ Benefits & Subsidies</a>
+              <a href="#services?category=government-registrations">▥ Government Registrations</a>
+              <a href="#custom">＋ Other Services / Custom</a>
+            </div>
+          </div>
+          <div class="menu-wrap">
+            <button class="top-menu-btn" data-menu="exploreMenu" aria-expanded="false">▦ Explore Services <span>⌄</span></button>
+            <div class="dropdown" id="exploreMenu" hidden>
+              <small>DISCOVER GOVERNMENT SERVICES</small>
+              <a href="#services">▦ All Services</a>
+              <a href="#services?view=category">▧ By Category</a>
+              <a href="#services?view=department">▤ By Department</a>
+              <a href="#services?view=state">⌖ By State</a>
+              <a href="#services?sort=popular">☆ Popular Services</a>
+              <a href="#services?sort=recent">◷ Recently Added</a>
+            </div>
+          </div>
+          <button class="icon-btn notification" aria-label="Notifications">♧<i></i></button>
+          <button class="profile"><span class="avatar">AK</span><span><b>Aman Kumar</b><small>Citizen</small></span><span>⌄</span></button>
+        </div>
+      </header>
+
+      <section id="appContent" class="page-content" aria-live="polite"></section>
+      <footer class="prototype-footer">CivicFlow design prototype · Illustrative content only · Not connected to live government portals or production services</footer>
+    </main>
+  </div>
+  <script src="app.js"></script>
+</body>
+</html>

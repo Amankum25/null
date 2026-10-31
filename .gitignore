@@ -29,3 +29,5 @@ htmlcov/
 .venv
 env/
 venv/
+.uv-cache/
+*.tsbuildinfo

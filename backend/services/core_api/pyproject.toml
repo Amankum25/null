@@ -34,3 +34,6 @@ dev = [
 
 [tool.hatch.build.targets.wheel]
 packages = ["app"]
+
+[tool.uv.sources]
+civicflow-contracts = { path = "../../contracts/civicflow_contracts", editable = true }

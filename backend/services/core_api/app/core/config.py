@@ -45,6 +45,7 @@ class Settings(BaseSettings):
     # --- Mock Mode ---
     USE_MOCK_AI: bool = True
     USE_MOCK_BROWSER: bool = True
+    ENFORCE_AUTH: bool = False
 
     model_config = {"env_file": ".env", "env_file_encoding": "utf-8", "extra": "ignore"}
 

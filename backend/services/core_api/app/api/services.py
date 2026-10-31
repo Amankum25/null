@@ -99,17 +99,26 @@ _CATEGORY_META = {
 
 
 @router.get("", response_model=list[ServiceListItem])
-async def list_services(category: str | None = None, status: str | None = None):
+async def list_services(category: str | None = None, status: str | None = None, state: str | None = None, department: str | None = None, integration_mode: str | None = None, query: str | None = None):
     results = _SERVICE_CATALOG
     if category:
         results = [s for s in results if s["category"].value == category]
     if status:
         results = [s for s in results if s["status"].value == status]
+    if state:
+        results = [s for s in results if state.lower() in (s.get("jurisdiction") or "").lower()]
+    if department:
+        results = [s for s in results if department.lower() in (s.get("department") or "").lower()]
+    if query:
+        needle = query.lower()
+        results = [s for s in results if needle in s["title"].lower() or needle in s["description"].lower()]
     return [
         ServiceListItem(
             id=s["id"], title=s["title"], category=s["category"],
             description=s["description"], jurisdiction=s.get("jurisdiction"),
             department=s.get("department"), status=s["status"],
+            integration_mode=s.get("integration_mode", "information_only"),
+            application_mode=s.get("application_mode", "catalog"), aliases=s.get("aliases", []),
         )
         for s in results
     ]
@@ -140,5 +149,7 @@ async def get_service(service_id: str):
                 workflow_steps=s.get("workflow_steps", []),
                 eligibility_criteria=s.get("eligibility_criteria", []),
                 required_documents=s.get("required_documents", []),
+                integration_mode=s.get("integration_mode", "information_only"),
+                application_mode=s.get("application_mode", "catalog"), aliases=s.get("aliases", []),
             )
     raise HTTPException(status_code=404, detail=f"Service '{service_id}' not found")

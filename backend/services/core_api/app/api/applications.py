@@ -14,8 +14,10 @@ from civicflow_contracts.application import (
     UpdateApplicationRequest,
     ActivityEvent,
     TrackingInfo,
+    DocumentRequirement,
+    CustomApplicationRequest, CustomApplicationResponse,
 )
-from civicflow_contracts.common import ApplicationStatus, DocumentRequirement, DocumentStatus
+from civicflow_contracts.common import ApplicationStatus, DocumentStatus
 from app.core.state_machine import validate_transition, InvalidTransitionError
 
 router = APIRouter()
@@ -27,6 +29,24 @@ _applications: dict[str, dict] = {}
 _DEFAULT_DOCUMENTS = {
     "post-matric-scholarship": ["Aadhaar Card", "Income Certificate", "Previous Marksheet"],
 }
+
+@router.post("/custom", response_model=CustomApplicationResponse, status_code=status.HTTP_201_CREATED)
+async def create_custom_application(body: CustomApplicationRequest):
+    """Create a discovery-first application when no catalog service is known yet."""
+    app_id = _make_id()
+    ts = _now()
+    _applications[app_id] = {
+        "id": app_id, "service_id": "custom-request", "user_id": "user-aarav-patil",
+        "status": ApplicationStatus.draft.value, "current_step": 0, "progress": 0,
+        "form_data": {"request_text": body.request_text, "state_code": body.state_code,
+                       "district": body.district, "department_id": body.department_id,
+                       **body.additional_context}, "documents": [], "review_state": {},
+        "approval_state": "not_started", "tracking": {"demo_mode": True},
+        "created_at": ts, "updated_at": ts, "selected_scholarship": None,
+        "activity": [{"id": f"{app_id}-created", "label": "Custom service request received", "timestamp": ts, "tone": "blue"}],
+        "application_mode": "custom", "custom_status": "request_received",
+    }
+    return CustomApplicationResponse(application_id=app_id, message="Request received. CivicFlow will discover and verify the official service source.")
 
 
 def _now() -> str:
@@ -97,6 +117,12 @@ async def update_application(application_id: str, body: UpdateApplicationRequest
         raise HTTPException(status_code=404, detail="Application not found")
 
     if body.status is not None:
+        if body.status in {
+            ApplicationStatus.approved_for_submission,
+            ApplicationStatus.submission_in_progress,
+            ApplicationStatus.submitted,
+        }:
+            raise HTTPException(status_code=409, detail="Approval and submission statuses can only be set through their guarded workflow")
         try:
             validate_transition(ApplicationStatus(record["status"]), body.status)
         except InvalidTransitionError as e:

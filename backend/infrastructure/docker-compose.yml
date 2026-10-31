@@ -1,0 +1,32 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment: { POSTGRES_DB: civicflow, POSTGRES_USER: civicflow, POSTGRES_PASSWORD: civicflow }
+    ports: ["5432:5432"]
+    volumes: ["postgres-data:/var/lib/postgresql/data"]
+    healthcheck: { test: ["CMD-SHELL", "pg_isready -U civicflow"], interval: 5s, timeout: 3s, retries: 10 }
+  redis:
+    image: redis:7-alpine
+    ports: ["6379:6379"]
+  minio:
+    image: minio/minio:latest
+    command: server /data --console-address ":9001"
+    environment: { MINIO_ROOT_USER: minioadmin, MINIO_ROOT_PASSWORD: minioadmin }
+    ports: ["9000:9000", "9001:9001"]
+    volumes: ["minio-data:/data"]
+  core-api:
+    build: { context: .., dockerfile: services/core_api/Dockerfile }
+    environment: { USE_MOCK_AI: "true", USE_MOCK_BROWSER: "true", AI_AGENT_URL: "http://ai-agent:8001", BROWSER_AGENT_URL: "http://browser-agent:8002", DATABASE_URL: "postgresql+asyncpg://civicflow:civicflow@postgres:5432/civicflow", REDIS_URL: "redis://redis:6379/0", OBJECT_STORAGE_URL: "http://minio:9000" }
+    ports: ["8000:8000"]
+    depends_on: { postgres: { condition: service_healthy }, redis: { condition: service_started } }
+  ai-agent:
+    build: { context: .., dockerfile: services/ai_agent/Dockerfile }
+    ports: ["8001:8001"]
+  browser-agent:
+    build: { context: .., dockerfile: services/browser_agent/Dockerfile }
+    environment: { REDIS_URL: "redis://redis:6379/0" }
+    ports: ["8002:8002"]
+    depends_on: [redis]
+volumes:
+  postgres-data:
+  minio-data:

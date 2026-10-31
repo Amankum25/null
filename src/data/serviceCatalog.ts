@@ -13,6 +13,7 @@ export interface Service {
   workflowSteps?: string[]
   eligibility?: string[]
   documents?: string[]
+  aliases?: string[]
 }
 
 export const serviceCatalog: Service[] = [

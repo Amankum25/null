@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><title>CivicFlow Local Test Portal</title></head>
+<body>
+  <main>
+    <h1>Local Scholarship Application Test Portal</h1>
+    <p>This local fixture is for browser-service development only. It is not an official government website.</p>
+    <form>
+      <label>Applicant name <input name="applicant_name" autocomplete="off"></label>
+      <label>District <input name="district" autocomplete="off"></label>
+      <label>Application note <textarea name="note"></textarea></label>
+      <label>Password (user entry only) <input name="password" type="password" autocomplete="new-password"></label>
+      <label>One-time code (user entry only) <input name="otp" inputmode="numeric" autocomplete="one-time-code"></label>
+      <button type="button" id="review">Review mock details</button>
+      <output id="result" aria-live="polite"></output>
+    </form>
+    <script>document.querySelector('#review').addEventListener('click', () => { document.querySelector('#result').textContent = 'Mock details ready for review'; });</script>
+  </main>
+</body>
+</html>

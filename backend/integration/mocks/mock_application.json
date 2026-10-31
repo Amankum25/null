@@ -1,0 +1,5 @@
+{
+  "service_id": "post-matric-scholarship",
+  "applicant": { "applicant_name": "Test Applicant", "district": "Pune" },
+  "note": "Synthetic fixture data only; never use real citizen information."
+}

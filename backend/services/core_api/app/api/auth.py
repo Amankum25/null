@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, HTTPException, status, Depends
 
 from civicflow_contracts.application import (
     LoginRequest,
@@ -17,6 +17,7 @@ from app.core.security import (
     verify_password,
     decode_token,
 )
+from app.core.dependencies import current_claims
 
 router = APIRouter()
 
@@ -67,11 +68,12 @@ async def refresh(token: str):
 
 
 @router.get("/me", response_model=UserProfile)
-async def me():
-    # TODO: extract user from Authorization header via dependency injection
-    # For now, return a demo profile
+async def me(claims: dict = Depends(current_claims)):
+    user = next((u for u in _users.values() if u["id"] == claims.get("sub")), None)
+    if user:
+        return UserProfile(id=user["id"], name=user["name"], email=user["email"], phone=user.get("phone"), location=user.get("location"))
     return UserProfile(
-        id="user-aarav-patil",
+        id=claims.get("sub", "user-aarav-patil"),
         name="Aarav Patil",
         email="aarav@example.com",
         phone="+91 98765 43210",

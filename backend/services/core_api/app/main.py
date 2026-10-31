@@ -11,6 +11,8 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.core.config import settings
 from app.api import router as api_router
+from app.db.health import dependency_health, close_connections
+from fastapi import HTTPException
 
 
 @asynccontextmanager
@@ -20,6 +22,7 @@ async def lifespan(application: FastAPI):
     print(f"[core_api] Starting CivicFlow Core API v{settings.APP_VERSION}")
     yield
     # Shutdown — close pools
+    await close_connections()
     print("[core_api] Shutting down Core API")
 
 
@@ -54,5 +57,8 @@ async def liveness():
 
 @app.get("/health/ready", tags=["health"])
 async def readiness():
-    # TODO: check DB and Redis connectivity
-    return {"status": "ready", "service": "core_api", "version": settings.APP_VERSION}
+    dependencies = await dependency_health()
+    ready = all(value == "ready" for value in dependencies.values())
+    if not ready:
+        raise HTTPException(status_code=503, detail={"status": "not_ready", "service": "core_api", "dependencies": dependencies})
+    return {"status": "ready", "service": "core_api", "version": settings.APP_VERSION, "dependencies": dependencies}

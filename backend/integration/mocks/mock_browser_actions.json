@@ -1,0 +1,10 @@
+{
+  "contract_version": "1.0.0",
+  "actions": [
+    { "command_type": "inspect" },
+    { "command_type": "fill", "element_id": "applicant_name", "value": "Test Applicant" },
+    { "command_type": "fill", "element_id": "district", "value": "Pune" },
+    { "command_type": "inspect" }
+  ],
+  "note": "Do not automate password, OTP, CAPTCHA or authentication_secret fields."
+}

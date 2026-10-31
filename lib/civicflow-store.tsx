@@ -27,6 +27,11 @@ export interface Application {
   updatedAt: string
   activity: ActivityEvent[]
   selectedScholarship?: string | null
+  applicationMode?: "catalog" | "custom"
+  customRequest?: string
+  customState?: string
+  customDistrict?: string
+  customDepartment?: string
 }
 
 type StoreState = {
@@ -42,6 +47,7 @@ type StoreState = {
 type CivicFlowContext = {
   state: StoreState
   createApplication: (serviceId: string, options?: { scholarshipId?: string }) => Application | null
+  createCustomApplication: (request: string, jurisdiction: string, district?: string, department?: string) => Application
   getApplication: (applicationId: string) => Application | null
   updateApplication: (applicationId: string, patch: Partial<Application>) => void
   deleteApplication: (applicationId: string) => void
@@ -106,6 +112,20 @@ export function CivicFlowProvider({ children }: { children: ReactNode }) {
         approvalState: "not_started", tracking: { demoMode: true }, createdAt: timestamp, updatedAt: timestamp,
         selectedScholarship: options?.scholarshipId ?? null,
         activity: [{ id: `${id}-created`, label: "Application draft created", timestamp, tone: "blue" }],
+      }
+      setState((current) => ({ ...current, applications: { ...current.applications, [id]: application }, selectedApplicationId: id }))
+      return application
+    },
+    createCustomApplication: (request, jurisdiction, district, department) => {
+      const timestamp = now()
+      const id = createId()
+      const application: Application = {
+        id, serviceId: "custom-request", userId: state.user.id, status: "draft", currentStep: 0, progress: 0,
+        formData: { applicantName: "", fatherName: "", income: "", dob: "", category: "" }, documents: [],
+        reviewState: { service: false, details: false, documents: false }, approvalState: "not_started",
+        tracking: { demoMode: true }, createdAt: timestamp, updatedAt: timestamp,
+        applicationMode: "custom", customRequest: request.trim(), customState: jurisdiction.trim(), customDistrict: district?.trim(), customDepartment: department?.trim(),
+        activity: [{ id: `${id}-created`, label: "Custom service request created — source verification needed", timestamp, tone: "amber" }],
       }
       setState((current) => ({ ...current, applications: { ...current.applications, [id]: application }, selectedApplicationId: id }))
       return application

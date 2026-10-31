@@ -1,0 +1,20 @@
+{
+  "designSystem": "CivicFlow Indian Civic Identity v2.0",
+  "components": [
+    {"name":"AppShell","parts":["ExpandedSidebar","TopBar","PageContent"],"usedOn":"All routes","rules":["Desktop sidebar stays expanded with all nine labels visible","Topbar has New Application and Explore Services dropdowns"]},
+    {"name":"ExpandedSidebar","parts":["Logo","NavItem","NotificationDot"],"items":["Dashboard","New Application","Explore Services","My Applications","Documents","Approvals","AI Assistant","Notifications","Settings"],"states":["default","active","hover","keyboard-focus"]},
+    {"name":"TopBarDropdown","parts":["Trigger","DropdownPanel","DropdownItem"],"menus":["New Application categories","Explore Services views"],"rules":["Click/tap opens","Outside click and Escape close","Keyboard navigable"]},
+    {"name":"DashboardHero","parts":["WelcomeCopy","PrimaryAction","TempleFlagTricolourArtwork"],"rules":["Use approved same artwork","Do not cover artwork with text","Data action routes into application/discovery"]},
+    {"name":"MetricCard","parts":["Icon","Value","Label"],"rules":["Values from real app state, not static reference values"]},
+    {"name":"CategoryCard","variants":["education-scholarships","certificates","licenses-permits","benefits-subsidies","government-registrations","other-services"],"rules":["All six visible on /applications/new initial state"]},
+    {"name":"ServiceDirectory","parts":["Search","StatePicker","DepartmentPicker","CategoryFilter","CapabilityFilter","Sort","Results"],"rules":["State and department data-driven","Filters serializable in URL"]},
+    {"name":"ServiceCard","parts":["Name","State","Department","Description","Availability","IntegrationMode","Action"],"rules":["Separate government availability from CivicFlow automation capability"]},
+    {"name":"CustomServicePrompt","parts":["RequestText","State","OptionalDistrict","OptionalDepartment","DiscoveryAction"],"rules":["Do not request sensitive identity/authentication data at discovery stage"]},
+    {"name":"ServiceCandidateCard","parts":["ServiceName","State","Department","SourceLinks","IssuingLevels","Capability","SelectAction"],"rules":["Only verified source data may be presented as official"]},
+    {"name":"ThreePanelWorkspace","parts":["ApplicationContext","EmbeddedBrowser","AICompanion"],"rules":["Actual Browser Agent session or honest demo/unavailable state","User can take control, pause, resume, stop"]},
+    {"name":"BrowserToolbar","parts":["Origin","Back","Forward","Refresh","TakeControl","PauseAI","ResumeAI","Stop"],"rules":["Only enabled controls that are truly implemented"]},
+    {"name":"FieldMappingProposal","parts":["PortalField","ProposedValueReference","Reason","Risk","Confirmation"],"rules":["Grounded element handles, user review and Core authorization"]},
+    {"name":"ReviewGate","parts":["CompletenessChecklist","Declaration","ExplicitConfirmation"],"rules":["All required checks and consent enforced in Core"]},
+    {"name":"TrustNotice","parts":["CapabilityLabel","SourceAttribution","DemoOrLiveStatus"],"rules":["Never imply automation, verification or submission when unproven"]}
+  ]
+}

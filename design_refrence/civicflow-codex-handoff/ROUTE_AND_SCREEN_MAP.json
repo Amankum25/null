@@ -1,0 +1,199 @@
+{
+  "app": "CivicFlow",
+  "framework": "Existing Next.js App Router repository",
+  "screens": [
+    {
+      "id": "dashboard",
+      "path": "/dashboard",
+      "purpose": "Citizen overview with approved temple/tricolour hero, activity metrics, recent applications and quick actions.",
+      "primaryAction": "Start a new application or discover a service"
+    },
+    {
+      "id": "new-application",
+      "path": "/applications/new",
+      "purpose": "Six-category entry page. All six categories and category search visible on initial load.",
+      "primaryAction": "Choose a category"
+    },
+    {
+      "id": "services",
+      "path": "/services",
+      "purpose": "State-aware searchable service directory with category cards, state/department filters and integration capability indicators.",
+      "primaryAction": "View details or start custom application"
+    },
+    {
+      "id": "service-details",
+      "path": "/services/[slug]",
+      "purpose": "Verified service information, eligibility, documents, responsible department, issuing authority and application options.",
+      "primaryAction": "Apply Now / Open guided portal / View official source based on capability"
+    },
+    {
+      "id": "applications",
+      "path": "/applications",
+      "purpose": "List all independent application sessions with service, state, created date, status and continuation action.",
+      "primaryAction": "Continue application"
+    },
+    {
+      "id": "workspace",
+      "path": "/applications/[id]/workspace",
+      "purpose": "Three-panel application workspace with progress/context, actual embedded portal browser and AI companion.",
+      "primaryAction": "Continue guided completion; user confirms any consequential action"
+    },
+    {
+      "id": "form",
+      "path": "/applications/[id]/form",
+      "purpose": "Structured native CivicFlow form for natively integrated services, with saved state and clear validation.",
+      "primaryAction": "Save and continue"
+    },
+    {
+      "id": "review",
+      "path": "/applications/[id]/review",
+      "purpose": "Application-specific completeness review, document checks, field confirmation and explicit declaration.",
+      "primaryAction": "Confirm readiness / continue to user-authorized submission"
+    },
+    {
+      "id": "tracking",
+      "path": "/applications/[id]/tracking",
+      "purpose": "Application timeline with source attribution and explicit unconfirmed state when official status cannot be verified.",
+      "primaryAction": "Refresh official status or view evidence"
+    },
+    {
+      "id": "approvals",
+      "path": "/approvals",
+      "purpose": "Explicit user approvals for proposed actions or submissions; enforce all policy and review requirements.",
+      "primaryAction": "Review and explicitly approve permitted action"
+    },
+    {
+      "id": "assistant",
+      "path": "/assistant",
+      "purpose": "General conversational service discovery and application help, with links to matching services/sessions.",
+      "primaryAction": "Ask a question or create a custom application session"
+    },
+    {
+      "id": "documents",
+      "path": "/documents",
+      "purpose": "Document wallet showing stored document metadata, consent/access context and real verification status.",
+      "primaryAction": "Upload/manage document"
+    },
+    {
+      "id": "settings",
+      "path": "/settings",
+      "purpose": "Profile, language, notification and privacy/account settings.",
+      "primaryAction": "Save settings"
+    },
+    {
+      "id": "notifications",
+      "path": "/notifications",
+      "purpose": "Notification center for service, application and account updates.",
+      "primaryAction": "Open related application or notification detail"
+    }
+  ],
+  "alwaysVisibleSidebar": [
+    {
+      "label": "Dashboard",
+      "path": "/dashboard"
+    },
+    {
+      "label": "New Application",
+      "path": "/applications/new"
+    },
+    {
+      "label": "Explore Services",
+      "path": "/services"
+    },
+    {
+      "label": "My Applications",
+      "path": "/applications"
+    },
+    {
+      "label": "Documents",
+      "path": "/documents"
+    },
+    {
+      "label": "Approvals",
+      "path": "/approvals"
+    },
+    {
+      "label": "AI Assistant",
+      "path": "/assistant"
+    },
+    {
+      "label": "Notifications",
+      "path": "/notifications"
+    },
+    {
+      "label": "Settings",
+      "path": "/settings"
+    }
+  ],
+  "topbarDropdowns": {
+    "newApplication": [
+      {
+        "label": "Education & Scholarships",
+        "category": "education-scholarships"
+      },
+      {
+        "label": "Certificates",
+        "category": "certificates"
+      },
+      {
+        "label": "Licenses & Permits",
+        "category": "licenses-permits"
+      },
+      {
+        "label": "Benefits & Subsidies",
+        "category": "benefits-subsidies"
+      },
+      {
+        "label": "Government Registrations",
+        "category": "government-registrations"
+      },
+      {
+        "label": "Other Services",
+        "category": "other-services"
+      }
+    ],
+    "exploreServices": [
+      {
+        "label": "All Services",
+        "query": ""
+      },
+      {
+        "label": "By Category",
+        "query": "view=category"
+      },
+      {
+        "label": "By Department",
+        "query": "view=department"
+      },
+      {
+        "label": "By State",
+        "query": "view=state"
+      },
+      {
+        "label": "Popular Services",
+        "query": "sort=popular"
+      },
+      {
+        "label": "Recently Added",
+        "query": "sort=recent"
+      }
+    ]
+  },
+  "categoryLanding": [
+    "Education & Scholarships",
+    "Certificates",
+    "Licenses & Permits",
+    "Benefits & Subsidies",
+    "Government Registrations",
+    "Other Services"
+  ],
+  "preserve": [
+    "The six category cards remain visible at first load of /applications/new.",
+    "The desktop sidebar is always expanded with all nine labels visible.",
+    "New Application and Explore Services remain available as topbar dropdown actions as well as sidebar destinations.",
+    "Each application has unique ID and isolated form/document/review/approval/tracking state.",
+    "Custom service discovery creates a custom application session; it is not only a service catalog suggestion ticket.",
+    "The browser panel is truly embedded/connected only when a real Browser Agent session is active; otherwise label it demo/unavailable.",
+    "Do not overwrite the user's existing routes, store logic, or service catalog without auditing and adapting them."
+  ]
+}
