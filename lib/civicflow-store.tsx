@@ -102,7 +102,7 @@ export function CivicFlowProvider({ children }: { children: ReactNode }) {
     state,
     createApplication: (serviceId, options) => {
       const service = serviceFor(serviceId)
-      if (!service || service.status !== "available") return null
+      if (!service) return null
       const timestamp = now()
       const id = createId()
       const application: Application = {
@@ -111,7 +111,7 @@ export function CivicFlowProvider({ children }: { children: ReactNode }) {
         reviewState: Object.fromEntries(["personal", "education", "financial", "documents"].map((key) => [key, false])),
         approvalState: "not_started", tracking: { demoMode: true }, createdAt: timestamp, updatedAt: timestamp,
         selectedScholarship: options?.scholarshipId ?? null,
-        activity: [{ id: `${id}-created`, label: "Application draft created", timestamp, tone: "blue" }],
+        activity: [{ id: `${id}-created`, label: service.status === "available" ? "Application draft created" : "CivicFlow workspace created; official application route needs verification", timestamp, tone: service.status === "available" ? "blue" : "amber" }],
       }
       setState((current) => ({ ...current, applications: { ...current.applications, [id]: application }, selectedApplicationId: id }))
       return application

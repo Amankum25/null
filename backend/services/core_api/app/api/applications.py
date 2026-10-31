@@ -19,6 +19,10 @@ from civicflow_contracts.application import (
 )
 from civicflow_contracts.common import ApplicationStatus, DocumentStatus
 from app.core.state_machine import validate_transition, InvalidTransitionError
+from app.api.services import _SERVICE_CATALOG
+
+from urllib.parse import urlparse
+from app.api.geo import _CACHED_STATES
 
 router = APIRouter()
 
@@ -28,13 +32,28 @@ _applications: dict[str, dict] = {}
 # Mimics the frontend's default documents for post-matric-scholarship
 _DEFAULT_DOCUMENTS = {
     "post-matric-scholarship": ["Aadhaar Card", "Income Certificate", "Previous Marksheet"],
+    "mock-citizen-certificate": ["Identity Proof", "Address Proof", "Income Declaration"],
 }
 
 @router.post("/custom", response_model=CustomApplicationResponse, status_code=status.HTTP_201_CREATED)
 async def create_custom_application(body: CustomApplicationRequest):
-    """Create a discovery-first application when no catalog service is known yet."""
+    """Create a discovery-first application with resolved jurisdiction portal URL."""
     app_id = _make_id()
     ts = _now()
+    
+    # Resolve portal URL if not explicitly provided
+    portal_url = body.portal_url
+    if not portal_url and body.state_code:
+        st_match = next((s for s in _CACHED_STATES if s["state_code"].lower() == body.state_code.lower()), None)
+        if st_match and st_match.get("primary_portal_url"):
+            portal_url = st_match["primary_portal_url"]
+            
+    allowed = []
+    if portal_url:
+        h = urlparse(portal_url).hostname
+        if h:
+            allowed.append(h)
+
     _applications[app_id] = {
         "id": app_id, "service_id": "custom-request", "user_id": "user-aarav-patil",
         "status": ApplicationStatus.draft.value, "current_step": 0, "progress": 0,
@@ -45,6 +64,8 @@ async def create_custom_application(body: CustomApplicationRequest):
         "created_at": ts, "updated_at": ts, "selected_scholarship": None,
         "activity": [{"id": f"{app_id}-created", "label": "Custom service request received", "timestamp": ts, "tone": "blue"}],
         "application_mode": "custom", "custom_status": "request_received",
+        "portal_url": portal_url,
+        "allowed_domains": allowed,
     }
     return CustomApplicationResponse(application_id=app_id, message="Request received. CivicFlow will discover and verify the official service source.")
 
@@ -70,6 +91,13 @@ async def create_application(body: CreateApplicationRequest):
         }
         for i, name in enumerate(_DEFAULT_DOCUMENTS.get(body.service_id, []))
     ]
+    portal_url = next((str(s.get("official_url")) for s in _SERVICE_CATALOG if s["id"] == body.service_id and s.get("official_url")), None)
+    allowed = []
+    if portal_url:
+        h = urlparse(portal_url).hostname
+        if h:
+            allowed.append(h)
+
     record = {
         "id": app_id,
         "service_id": body.service_id,
@@ -85,6 +113,9 @@ async def create_application(body: CreateApplicationRequest):
         "created_at": ts,
         "updated_at": ts,
         "selected_scholarship": body.selected_scholarship,
+        "portal_url": portal_url,
+        "allowed_domains": allowed,
+        "application_mode": "catalog",
         "activity": [{"id": f"{app_id}-created", "label": "Application draft created", "timestamp": ts, "tone": "blue"}],
     }
     _applications[app_id] = record
@@ -108,6 +139,17 @@ async def get_application(application_id: str):
     if not record:
         raise HTTPException(status_code=404, detail="Application not found")
     return _to_detail(record)
+
+@router.get("/{application_id}/portal")
+async def get_application_portal(application_id: str):
+    record = _applications.get(application_id)
+    if not record:
+        raise HTTPException(status_code=404, detail="Application not found")
+    url = record.get("portal_url")
+    if not url:
+        raise HTTPException(status_code=404, detail="No official portal is attached to this application")
+    from urllib.parse import urlparse
+    return {"application_id": application_id, "portal_url": url, "allowed_domains": [urlparse(url).hostname], "source_status": "listed_official_source"}
 
 
 @router.patch("/{application_id}", response_model=ApplicationDetail)
@@ -164,6 +206,7 @@ async def get_activity(application_id: str):
 
 
 def _to_detail(record: dict) -> ApplicationDetail:
+    form = record.get("form_data", {})
     return ApplicationDetail(
         id=record["id"],
         service_id=record["service_id"],
@@ -171,7 +214,7 @@ def _to_detail(record: dict) -> ApplicationDetail:
         status=record["status"],
         current_step=record["current_step"],
         progress=record["progress"],
-        form_data=record["form_data"],
+        form_data=form,
         documents=[
             DocumentRequirement(
                 document_id=d["document_id"], name=d["name"],
@@ -185,4 +228,10 @@ def _to_detail(record: dict) -> ApplicationDetail:
         created_at=record["created_at"],
         updated_at=record["updated_at"],
         selected_scholarship=record.get("selected_scholarship"),
+        portal_url=record.get("portal_url"),
+        allowed_domains=record.get("allowed_domains", []),
+        custom_request=form.get("request_text") if isinstance(form, dict) else None,
+        custom_state=form.get("state_code") if isinstance(form, dict) else None,
+        custom_district=form.get("district") if isinstance(form, dict) else None,
+        application_mode=record.get("application_mode", "catalog"),
     )

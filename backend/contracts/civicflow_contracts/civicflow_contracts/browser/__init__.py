@@ -64,8 +64,8 @@ class BrowserSessionPolicy(ContractModel):
 
 
 class BrowserSessionCreateRequest(ContractMetadata):
-    user_id: UUID
-    application_id: UUID
+    user_id: UUID | str = Field(default_factory=uuid4)
+    application_id: UUID | str
     service_id: str
     approved_portal_url: HttpUrl
     allowed_domains: list[str] = Field(min_length=1)
@@ -75,8 +75,9 @@ class BrowserSessionCreateRequest(ContractMetadata):
     @field_validator("approved_portal_url")
     @classmethod
     def require_https_portal(cls, value: HttpUrl) -> HttpUrl:
-        if value.scheme != "https":
-            raise ValueError("approved portal URL must use HTTPS")
+        local_mock = value.scheme == "http" and value.host in {"localhost", "127.0.0.1"} and value.port == 9090
+        if value.scheme != "https" and not local_mock:
+            raise ValueError("approved portal URL must use HTTPS (except the explicitly configured local mock portal)")
         return value
 
 
@@ -84,6 +85,7 @@ class BrowserSessionResponse(ContractMetadata):
     browser_session_id: UUID = Field(default_factory=uuid4)
     session_status: BrowserSessionStatus = BrowserSessionStatus.created
     stream_endpoint: str | None = None
+    stream_token: str | None = None
     expires_at: datetime
     capabilities: list[BrowserCapability] = Field(default_factory=list)
 

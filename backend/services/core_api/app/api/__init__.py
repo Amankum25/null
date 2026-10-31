@@ -13,6 +13,7 @@ from app.api.review import router as review_router
 from app.api.assistant import router as assistant_router
 from app.api.browser_sessions import router as browser_router
 from app.api.tracking import router as tracking_router
+from app.api.geo import router as geo_router
 
 router = APIRouter()
 
@@ -24,3 +25,4 @@ router.include_router(review_router, prefix="/api/v1", tags=["review"])
 router.include_router(assistant_router, prefix="/api/v1", tags=["assistant"])
 router.include_router(browser_router, prefix="/api/v1", tags=["browser"])
 router.include_router(tracking_router, prefix="/api/v1", tags=["tracking"])
+router.include_router(geo_router, prefix="/api/v1/geo", tags=["geography"])

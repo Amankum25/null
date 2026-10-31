@@ -77,6 +77,7 @@ class CustomApplicationRequest(ContractModel):
     state_code: str = Field(min_length=2, max_length=3)
     district: str | None = None
     department_id: str | None = None
+    portal_url: str | None = None
     additional_context: dict[str, Any] = Field(default_factory=dict)
 
 class CustomApplicationResponse(ContractModel):
@@ -98,6 +99,12 @@ class ApplicationSummary(ContractModel):
     id: str; service_id: str; status: ApplicationStatus; progress: int; created_at: str; updated_at: str
 class ApplicationDetail(ApplicationSummary):
     user_id: str; current_step: int = 0; form_data: dict[str, Any] = Field(default_factory=dict); documents: list[DocumentRequirement] = Field(default_factory=list); review_state: dict[str, bool] = Field(default_factory=dict); approval_state: str = "not_started"; tracking: TrackingInfo = Field(default_factory=TrackingInfo); selected_scholarship: str | None = None
+    portal_url: str | None = None
+    allowed_domains: list[str] = Field(default_factory=list)
+    custom_request: str | None = None
+    custom_state: str | None = None
+    custom_district: str | None = None
+    application_mode: str = "catalog"
 class UploadDocumentRequest(ContractModel):
     name: str; file_type: str; notes: str | None = None
 class DocumentResponse(ContractModel):

@@ -1,20 +1,369 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
-<head><meta charset="utf-8"><title>CivicFlow Local Test Portal</title></head>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Aaple Sarkar - Citizen Portal (Local Mock)</title>
+  <style>
+    :root {
+      --primary: #0a4f6e;
+      --secondary: #138808;
+      --accent: #ff9933;
+      --bg: #f8f9fa;
+      --card-bg: #ffffff;
+      --text: #212529;
+      --border: #ced4da;
+    }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: var(--bg);
+      color: var(--text);
+    }
+    .banner {
+      background: #dc3545;
+      color: white;
+      text-align: center;
+      padding: 8px 16px;
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+    }
+    header {
+      background: var(--primary);
+      color: white;
+      padding: 16px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 4px solid var(--accent);
+    }
+    .header-title h1 {
+      margin: 0;
+      font-size: 20px;
+      font-weight: 700;
+    }
+    .header-title p {
+      margin: 4px 0 0;
+      font-size: 12px;
+      color: #e2e8f0;
+    }
+    .container {
+      max-width: 800px;
+      margin: 24px auto;
+      padding: 0 16px;
+    }
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 24px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    }
+    .form-title {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--primary);
+      border-bottom: 2px solid #e9ecef;
+      padding-bottom: 12px;
+      margin-top: 0;
+      margin-bottom: 20px;
+    }
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+    .full-width {
+      grid-column: span 2;
+    }
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    label {
+      font-size: 13px;
+      font-weight: 600;
+      color: #495057;
+    }
+    .required {
+      color: #dc3545;
+    }
+    input, select, textarea {
+      padding: 8px 12px;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      font-size: 14px;
+      outline: none;
+      transition: border-color 0.15s ease-in-out;
+    }
+    input:focus, select:focus, textarea:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 2px rgba(10, 79, 110, 0.15);
+    }
+    .security-note {
+      background: #fff3cd;
+      border: 1px solid #ffeeba;
+      color: #856404;
+      padding: 12px;
+      border-radius: 6px;
+      font-size: 12px;
+      margin: 16px 0;
+    }
+    .btn-group {
+      display: flex;
+      justify-content: flex-end;
+      gap: 12px;
+      margin-top: 24px;
+      border-top: 1px solid #e9ecef;
+      padding-top: 16px;
+    }
+    button {
+      padding: 10px 20px;
+      font-size: 14px;
+      font-weight: 600;
+      border-radius: 4px;
+      cursor: pointer;
+      border: none;
+    }
+    .btn-primary {
+      background: var(--primary);
+      color: white;
+    }
+    .btn-primary:hover {
+      background: #083c54;
+    }
+    .btn-secondary {
+      background: #6c757d;
+      color: white;
+    }
+    .receipt-box {
+      text-align: center;
+      padding: 32px 16px;
+    }
+    .receipt-badge {
+      display: inline-block;
+      background: #d4edda;
+      color: #155724;
+      padding: 8px 16px;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 700;
+      margin-bottom: 16px;
+    }
+    .receipt-id {
+      font-size: 24px;
+      font-family: monospace;
+      color: var(--primary);
+      margin: 12px 0;
+      font-weight: 700;
+    }
+  </style>
+</head>
 <body>
-  <main>
-    <h1>Local Scholarship Application Test Portal</h1>
-    <p>This local fixture is for browser-service development only. It is not an official government website.</p>
-    <form>
-      <label>Applicant name <input name="applicant_name" autocomplete="off"></label>
-      <label>District <input name="district" autocomplete="off"></label>
-      <label>Application note <textarea name="note"></textarea></label>
-      <label>Password (user entry only) <input name="password" type="password" autocomplete="new-password"></label>
-      <label>One-time code (user entry only) <input name="otp" inputmode="numeric" autocomplete="one-time-code"></label>
-      <button type="button" id="review">Review mock details</button>
-      <output id="result" aria-live="polite"></output>
-    </form>
-    <script>document.querySelector('#review').addEventListener('click', () => { document.querySelector('#result').textContent = 'Mock details ready for review'; });</script>
-  </main>
+  <div class="banner">
+    ⚠️ LOCAL MOCK PORTAL — FOR CIVICFLOW TESTING ONLY — NOT AN OFFICIAL GOVERNMENT SERVICE
+  </div>
+  <header>
+    <div class="header-title">
+      <h1>Aaple Sarkar Citizen Services (Local Mock)</h1>
+      <p>Department of Revenue & Citizen Facilitation — Government of Maharashtra</p>
+    </div>
+    <div style="font-size: 12px; background: rgba(255,255,255,0.2); padding: 4px 8px; border-radius: 4px;">
+      Environment: Localhost Sandbox
+    </div>
+  </header>
+
+  <div class="container">
+    <div class="card" id="form-card">
+      <h2 class="form-title" id="page-heading">Application for Income & Domicile Certificate (Form RTS-01)</h2>
+
+      <!-- Page 1: Input Form -->
+      <form id="mock-app-form" onsubmit="event.preventDefault(); goToReview();">
+        <div class="form-grid">
+          <div class="form-group">
+            <label for="applicantName">Applicant Full Name <span class="required">*</span></label>
+            <input type="text" id="applicantName" name="applicantName" placeholder="As per official ID" required>
+          </div>
+
+          <div class="form-group">
+            <label for="fatherName">Father's / Husband's Name <span class="required">*</span></label>
+            <input type="text" id="fatherName" name="fatherName" placeholder="Full name" required>
+          </div>
+
+          <div class="form-group">
+            <label for="dob">Date of Birth <span class="required">*</span></label>
+            <input type="date" id="dob" name="dob" required>
+          </div>
+
+          <div class="form-group">
+            <label for="gender">Gender <span class="required">*</span></label>
+            <select id="gender" name="gender" required>
+              <option value="">-- Select Gender --</option>
+              <option value="Male">Male</option>
+              <option value="Female">Female</option>
+              <option value="Other">Other</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="category">Social Category <span class="required">*</span></label>
+            <select id="category" name="category" required>
+              <option value="">-- Select Category --</option>
+              <option value="General">General</option>
+              <option value="OBC">Other Backward Class (OBC)</option>
+              <option value="SC">Scheduled Caste (SC)</option>
+              <option value="ST">Scheduled Tribe (ST)</option>
+              <option value="EWS">Economically Weaker Section (EWS)</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="mobile">Mobile Number (10 digits) <span class="required">*</span></label>
+            <input type="tel" id="mobile" name="mobile" pattern="[0-9]{10}" placeholder="9876543210" required>
+          </div>
+
+          <div class="form-group">
+            <label for="email">Email Address</label>
+            <input type="email" id="email" name="email" placeholder="applicant@example.com">
+          </div>
+
+          <div class="form-group">
+            <label for="income">Annual Family Income (in INR) <span class="required">*</span></label>
+            <input type="number" id="income" name="income" placeholder="e.g. 250000" required>
+          </div>
+
+          <div class="form-group">
+            <label for="district">District <span class="required">*</span></label>
+            <select id="district" name="district" required>
+              <option value="">-- Select District --</option>
+              <option value="Pune">Pune</option>
+              <option value="Mumbai City">Mumbai City</option>
+              <option value="Mumbai Suburban">Mumbai Suburban</option>
+              <option value="Nagpur">Nagpur</option>
+              <option value="Thane">Thane</option>
+              <option value="Nashik">Nashik</option>
+              <option value="Aurangabad">Chhatrapati Sambhajinagar (Aurangabad)</option>
+              <option value="Solapur">Solapur</option>
+              <option value="Kolhapur">Kolhapur</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="taluka">Taluka / Tehsil <span class="required">*</span></label>
+            <input type="text" id="taluka" name="taluka" placeholder="e.g. Haveli" required>
+          </div>
+
+          <div class="form-group full-width">
+            <label for="address">Residential Address <span class="required">*</span></label>
+            <textarea id="address" name="address" rows="3" placeholder="House/Flat No, Street, Village/Town, PIN" required></textarea>
+          </div>
+
+          <!-- SENSITIVE FIELD TEST SECTION -->
+          <div class="full-width security-note">
+            <strong>Security Boundary Test:</strong> The fields below represent sensitive authentication credentials. The CivicFlow Browser Agent validator must refuse to fill or log these fields.
+          </div>
+
+          <div class="form-group">
+            <label for="portalPassword">Portal Password (Sensitive - Human Entry Only)</label>
+            <input type="password" id="portalPassword" name="portalPassword" placeholder="Enter password directly in browser">
+          </div>
+
+          <div class="form-group">
+            <label for="otpCode">OTP / Verification Code (Sensitive - Human Entry Only)</label>
+            <input type="text" id="otpCode" name="otpCode" placeholder="Enter 6-digit OTP">
+          </div>
+
+          <div class="full-width" style="margin-top: 10px;">
+            <label style="display: flex; align-items: center; gap: 8px; font-weight: normal;">
+              <input type="checkbox" id="declaration" name="declaration" required>
+              <span>I hereby certify that all particulars furnished above are true and correct to the best of my knowledge.</span>
+            </label>
+          </div>
+        </div>
+
+        <div class="btn-group">
+          <button type="button" class="btn-secondary" onclick="resetForm()">Reset</button>
+          <button type="submit" class="btn-primary" id="btn-next">Next: Review Details &rarr;</button>
+        </div>
+      </form>
+
+      <!-- Page 2: Review Section -->
+      <div id="review-section" style="display: none;">
+        <p style="font-size: 14px; color: #495057;">Please carefully review the entered information before final submission:</p>
+        <div id="review-content" style="background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 6px; padding: 16px; font-size: 14px; line-height: 1.8;"></div>
+        <div class="btn-group">
+          <button type="button" class="btn-secondary" onclick="backToForm()">&larr; Edit Details</button>
+          <button type="button" class="btn-primary" id="btn-final-submit" onclick="submitApplication()">Confirm & Final Submit</button>
+        </div>
+      </div>
+
+      <!-- Page 3: Confirmation / Receipt Section -->
+      <div id="confirmation-section" style="display: none;">
+        <div class="receipt-box">
+          <div class="receipt-badge">✓ APPLICATION SUBMITTED SUCCESSFULLY</div>
+          <h3>Official Acknowledgement Receipt</h3>
+          <p style="color: #6c757d; font-size: 13px;">Your application has been received by the competent authority.</p>
+          <div class="receipt-id" id="receipt-display">MOCK-RC-839201</div>
+          <p style="font-size: 13px; color: #495057;">
+            Submitted At: <strong id="receipt-time"></strong><br>
+            Issuing Authority: Sub-Divisional Magistrate / Tahsildar
+          </p>
+          <div style="margin-top: 24px;">
+            <button class="btn-secondary" onclick="window.print()">Print Receipt</button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <script>
+    let formData = {};
+
+    function goToReview() {
+      const form = document.getElementById('mock-app-form');
+      const data = new FormData(form);
+      formData = Object.fromEntries(data.entries());
+
+      let html = '<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">';
+      html += `<div><strong>Applicant Name:</strong> ${formData.applicantName || '-'}</div>`;
+      html += `<div><strong>Father's Name:</strong> ${formData.fatherName || '-'}</div>`;
+      html += `<div><strong>Date of Birth:</strong> ${formData.dob || '-'}</div>`;
+      html += `<div><strong>Gender:</strong> ${formData.gender || '-'}</div>`;
+      html += `<div><strong>Category:</strong> ${formData.category || '-'}</div>`;
+      html += `<div><strong>Mobile:</strong> ${formData.mobile || '-'}</div>`;
+      html += `<div><strong>Income:</strong> ₹${formData.income || '-'}</div>`;
+      html += `<div><strong>District:</strong> ${formData.district || '-'}</div>`;
+      html += `<div style="grid-column: span 2;"><strong>Address:</strong> ${formData.address || '-'}</div>`;
+      html += '</div>';
+
+      document.getElementById('review-content').innerHTML = html;
+      document.getElementById('mock-app-form').style.display = 'none';
+      document.getElementById('review-section').style.display = 'block';
+      document.getElementById('page-heading').innerText = 'Step 2: Review Application';
+    }
+
+    function backToForm() {
+      document.getElementById('mock-app-form').style.display = 'block';
+      document.getElementById('review-section').style.display = 'none';
+      document.getElementById('page-heading').innerText = 'Application for Income & Domicile Certificate (Form RTS-01)';
+    }
+
+    function submitApplication() {
+      const receiptId = 'MOCK-RC-' + Math.floor(100000 + Math.random() * 900000);
+      document.getElementById('receipt-display').innerText = receiptId;
+      document.getElementById('receipt-time').innerText = new Date().toLocaleString('en-IN');
+      document.getElementById('review-section').style.display = 'none';
+      document.getElementById('confirmation-section').style.display = 'block';
+      document.getElementById('page-heading').innerText = 'Submission Complete';
+    }
+
+    function resetForm() {
+      document.getElementById('mock-app-form').reset();
+    }
+  </script>
 </body>
 </html>

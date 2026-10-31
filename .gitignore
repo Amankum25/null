@@ -31,3 +31,4 @@ env/
 venv/
 .uv-cache/
 *.tsbuildinfo
+*.log

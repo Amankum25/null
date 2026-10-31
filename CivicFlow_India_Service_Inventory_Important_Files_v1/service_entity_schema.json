@@ -1,0 +1,83 @@
+{
+  "entity": "GovernmentService",
+  "purpose": "One service may have different official portals, documents, fees, eligibility and issuing authorities by state, district and issuing level. Store those as jurisdiction-specific records; do not infer one state checklist applies nationwide.",
+  "fields": {
+    "id": "stable CivicFlow internal ID, e.g. IN-BR-CASTE-CERT-CIRCLE",
+    "canonical_service_id": "shared canonical task ID, e.g. caste_certificate",
+    "name": "display name",
+    "aliases": [
+      "local-language and common search terms"
+    ],
+    "category_id": "one service_categories.json id",
+    "state_code": "ISO-like CivicFlow state/UT code from state_ut_portals.json",
+    "districts": "optional allow-list or all districts",
+    "tehsil_block_circle": "optional finer location/issuing-level constraints",
+    "department": "verified responsible department string and stable department ID",
+    "issuing_authority_levels": [
+      "Circle/Block",
+      "Sub-Division",
+      "District, etc. only where source confirms"
+    ],
+    "official_service_url": "deep-link to a specific service, not merely home page; nullable if not stable",
+    "official_portal_url": "main portal entry point",
+    "document_checklist_url": "official checklist page/PDF; nullable if not found",
+    "documents": [
+      {
+        "name": "document name",
+        "required": "required|conditional|optional|unknown",
+        "applies_when": "conditional rule, if officially documented",
+        "source_url": "official source URL",
+        "last_verified_at": "YYYY-MM-DD"
+      }
+    ],
+    "eligibility_rules": "structured requirements only when backed by official notification/portal",
+    "fees": "amount/currency/fee type/source; use unknown if not verified",
+    "sla_days": "official service-level timeline, nullable",
+    "application_modes": [
+      "online",
+      "CSC/kiosk",
+      "offline",
+      "hybrid"
+    ],
+    "department_contacts": "optional official helpdesk and grievance authority",
+    "official_sources": [
+      {
+        "url": "source URL",
+        "source_type": "state_portal|department_order|service_detail|RTS_notification",
+        "checked_at": "YYYY-MM-DD"
+      }
+    ],
+    "source_verified_at": "last official review date",
+    "last_checked_at": "last automated/manual health check",
+    "verification_status": "verified|manual_review_required|portal_unavailable|source_conflict|unverified",
+    "government_service_status": "available|temporarily_unavailable|offline_only|discontinued|unknown",
+    "civicflow_integration_mode": "directory_only|external_link|browser_stream_candidate|browser_stream_tested|native_integration",
+    "browser_policy": {
+      "allowed_domains": [
+        "exact official host and explicitly approved subdomains"
+      ],
+      "frame_allowed": "true|false|unknown",
+      "requires_browser_stream": "boolean/unknown",
+      "sensitive_steps": [
+        "login",
+        "OTP",
+        "CAPTCHA",
+        "payment",
+        "eSign"
+      ]
+    },
+    "source_confidence": "high|medium|low with explanation",
+    "language_options": [
+      "languages supported by portal, if verified"
+    ]
+  },
+  "important_rules": [
+    "Never infer documents from a generic certificate type. Document lists vary by State, district, applicant category, age, issuing tier and scheme purpose.",
+    "Do not equate service exists on a government website with CivicFlow automation implemented.",
+    "Do not mark a service available because a portal home page responds. Verify the exact service path and current submission mode.",
+    "Keep source URLs and timestamps on every document, eligibility and fee claim.",
+    "Never send passwords, OTP, CAPTCHA, card/bank credentials or eSign secrets to the AI model.",
+    "Final submission and payment require direct citizen action/confirmation.",
+    "If the government portal blocks iframe embedding, use Member 3 remote Playwright stream in the app workspace; do not use an insecure reverse proxy to defeat portal security headers."
+  ]
+}

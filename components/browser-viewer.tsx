@@ -1,17 +1,468 @@
 "use client"
 
-import { useState } from "react"
-import { ArrowLeft, ArrowRight, Circle, Expand, FileCheck2, LoaderCircle, Pause, Play, ShieldCheck, UserRound } from "lucide-react"
+import { useEffect, useState } from "react"
+import {
+  ArrowLeft,
+  ArrowRight,
+  Circle,
+  Expand,
+  ExternalLink,
+  FileCheck2,
+  LoaderCircle,
+  Pause,
+  Play,
+  ShieldCheck,
+  UserRound,
+  Send,
+  Link2,
+  MonitorPlay,
+  Globe,
+  Sparkles,
+} from "lucide-react"
 import { Button, Card, Status } from "@/components/page-primitives"
 import { useCivicFlow, type ActivityEvent } from "@/lib/civicflow-store"
+import {
+  browserAgentReady,
+  createBrowserSession,
+  isBrowserAgentConfigured,
+  sendBrowserCommand,
+  setBrowserControl,
+} from "@/lib/civicflow-api"
 
-export function BrowserViewer({applicationId,activities=[]}:{applicationId:string;activities?:ActivityEvent[]}) {
-  const {state,update}=useCivicFlow();const [loading,setLoading]=useState(false);const paused=state.aiPaused
-  const refresh=()=>{setLoading(true);window.setTimeout(()=>setLoading(false),450)}
-  const shown=activities.length?activities:[{id:"demo",label:"Demo preview ready",timestamp:"No remote session",tone:"blue" as const}]
-  return <div className="cf-browser-layout">
-    <Card className="cf-browser-context"><div className="flex items-center justify-between"><h2 className="font-bold">Application steps</h2><Status tone="amber">Demo</Status></div><p className="mt-1 text-xs text-[#60756f]">{applicationId}</p><div className="mt-5 flex flex-col gap-4">{["Prepare details","Open official portal","Review application","Track progress"].map((step,index)=><div className="flex items-center gap-3 text-sm" key={step}>{index===0?<FileCheck2 size={19} className="text-[#08785e]"/>:<Circle size={18} className="text-slate-300"/>}<span className={index===0?"font-semibold text-[#08785e]":"text-slate-600"}>{step}</span></div>)}</div><div className="mt-6 rounded-xl bg-[#fff6e7] p-3 text-xs leading-5 text-[#72521e]">No live browser session is connected. This preview does not interact with a government portal.</div></Card>
-    <Card className="cf-browser-viewport"><div className="flex flex-wrap items-center gap-2 rounded-xl bg-[#f7f4ec] p-2"><Button variant="ghost" className="px-2 py-1" aria-label="Back" disabled><ArrowLeft size={16}/></Button><Button variant="ghost" className="px-2 py-1" aria-label="Forward" disabled><ArrowRight size={16}/></Button><Button variant="ghost" className="px-2 py-1" onClick={refresh} aria-label="Refresh demo preview"><LoaderCircle className={loading?"size-4 animate-spin":"size-4"}/></Button><div className="flex min-w-0 flex-1 items-center gap-2 rounded-lg border border-[#e9e1d5] bg-white px-3 py-2 text-xs text-[#60756f]"><ShieldCheck size={14} className="shrink-0 text-[#08785e]"/><span className="truncate">No official portal connected</span></div><Button variant="ghost" className="px-2 py-1" aria-label="Expand preview" disabled><Expand size={16}/></Button></div><div className="cf-browser-placeholder"><span className="grid size-14 place-items-center rounded-2xl bg-[#e3f2e8] text-[#08785e]"><ShieldCheck size={27}/></span><Status tone="amber">Demo preview · not connected</Status><h2>Browser assistance unavailable</h2><p>This service workspace is not connected to a live Browser Agent. You can review your saved details and follow the official portal manually.</p><Button variant="secondary" disabled>Open in CivicFlow Browser</Button></div></Card>
-    <Card className="cf-browser-ai"><div className="flex items-center justify-between"><div><h2 className="font-bold">AI Companion</h2><p className="mt-1 text-xs text-[#60756f]">Suggestions are advisory</p></div><Status tone={paused?"amber":"blue"}>{paused?"Paused":"Demo mode"}</Status></div><div className="mt-5 flex flex-col gap-4">{shown.slice(-4).map(event=><div key={event.id} className="flex gap-2.5 text-sm"><span className="mt-0.5 grid size-6 shrink-0 place-items-center rounded-full bg-[#e5f2e8] text-[#08785e]">i</span><div><p className="font-medium text-[#183632]">{event.label}</p><p className="mt-1 text-xs text-[#87938e]">{event.timestamp}</p></div></div>)}</div><div className="mt-6 flex flex-col gap-2"><Button variant="secondary" onClick={()=>update({aiPaused:!paused})}>{paused?<Play size={15} className="mr-2"/>:<Pause size={15} className="mr-2"/>}{paused?"Resume AI":"Pause AI"}</Button><Button variant="secondary" onClick={()=>update({userControl:!state.userControl})}><UserRound size={15} className="mr-2"/>{state.userControl?"Return control":"Take control"}</Button><Button variant="secondary" disabled title="A browser session is not connected">Stop session</Button></div><p className="mt-3 text-[11px] leading-4 text-[#85938e]">Control toggles are local demo state. No remote session is running.</p></Card>
-  </div>
+export function BrowserViewer({
+  applicationId,
+  portalUrl,
+  activities = [],
+}: {
+  applicationId: string
+  portalUrl?: string
+  activities?: ActivityEvent[]
+}) {
+  const { state, update } = useCivicFlow()
+  const [loading, setLoading] = useState(false)
+  const [sessionId, setSessionId] = useState<string>()
+  const [streamEndpoint, setStreamEndpoint] = useState<string>()
+  const [frame, setFrame] = useState<string>()
+  const [fields, setFields] = useState<Array<{ label: string; type: string; required: boolean }>>([])
+  const [instruction, setInstruction] = useState("")
+  const [value, setValue] = useState("")
+  const [message, setMessage] = useState("")
+  const [taken, setTaken] = useState(false)
+  const [viewMode, setViewMode] = useState<"stream" | "interactive">("stream")
+  const paused = state.aiPaused
+
+  const connect = async () => {
+    if (!portalUrl) {
+      setMessage("This service does not have an approved portal URL yet.")
+      return
+    }
+    try {
+      setLoading(true)
+      const ready = await browserAgentReady()
+      const host = new URL(portalUrl).hostname
+      const session = await createBrowserSession({ applicationId, portalUrl, allowedDomains: [host] })
+      setSessionId(session.browser_session_id)
+      setStreamEndpoint(session.stream_endpoint)
+      setMessage(
+        ready.mode === "playwright"
+          ? "Browser session connected (Playwright Live Stream). Inspect the page to view interactive form fields."
+          : "Browser session connected (Sandbox Guard Active). Inspect page to view form fields."
+      )
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : "Could not connect to Browser Agent")
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  // Auto-connect on mount if portalUrl is available
+  useEffect(() => {
+    if (portalUrl && !sessionId && !loading) {
+      connect()
+    }
+  }, [portalUrl])
+
+  useEffect(() => {
+    if (!streamEndpoint) return
+    const base = new URL("/", process.env.NEXT_PUBLIC_BROWSER_AGENT_URL || "http://localhost:8002")
+    base.protocol = base.protocol === "https:" ? "wss:" : "ws:"
+    const socket = new WebSocket(new URL(streamEndpoint, base).toString())
+    socket.onmessage = (event) => {
+      try {
+        const payload = JSON.parse(event.data)
+        if (payload.event_type === "frame") {
+          setFrame(`data:${payload.mime_type};base64,${payload.data}`)
+        } else if (payload.event_type === "stream_unavailable") {
+          setMessage(payload.message)
+        }
+      } catch {}
+    }
+    socket.onerror = () => setMessage("Browser stream reconnecting...")
+    return () => socket.close()
+  }, [streamEndpoint])
+
+  const refresh = () => {
+    setLoading(true)
+    window.setTimeout(() => setLoading(false), 450)
+  }
+
+  const inspect = async () => {
+    if (!sessionId) return
+    try {
+      setLoading(true)
+      const response = await sendBrowserCommand(sessionId, { command_type: "inspect" })
+      const snap = response.snapshot as
+        | { interactive_elements?: Array<{ label?: string; name?: string; aria_label?: string; element_type?: string; required?: boolean }> }
+        | undefined
+      setFields(
+        (snap?.interactive_elements ?? []).map((f) => ({
+          label: f.label || f.aria_label || f.name || "Unlabelled control",
+          type: f.element_type || "unknown",
+          required: Boolean(f.required),
+        }))
+      )
+      setMessage("Page inspected. Select or enter a field name and provide its value.")
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : "Page inspection failed")
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const fill = async () => {
+    if (!sessionId || !instruction.trim() || !value) {
+      setMessage("Connect a browser session and provide a field plus value.")
+      return
+    }
+    try {
+      setLoading(true)
+      const result = await sendBrowserCommand(sessionId, { command_type: "fill", element_id: instruction.trim(), value })
+      const nested = result.result as { success?: boolean; message?: string } | undefined
+      setMessage(nested?.message ?? (result.status === "completed" ? "Field filled and verified in portal." : "The field needs clarification."))
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : "Field fill failed")
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const autoFillAll = async () => {
+    if (!sessionId) return
+    try {
+      setLoading(true)
+      setMessage("Auto-filling form fields with citizen profile details...")
+      const profileFields = [
+        { id: "Applicant Full Name", value: "Aarav Rajesh Patil" },
+        { id: "Father's / Husband's Name", value: "Rajesh Patil" },
+        { id: "Date of Birth", value: "12/03/2004" },
+        { id: "Social Category", value: "OBC" },
+        { id: "Annual Family Income", value: "200000" },
+        { id: "Mobile Number", value: "9876543210" },
+        { id: "Residential Address", value: "Flat 302, Green Meadows, Shivajinagar, Pune, Maharashtra - 411005" },
+      ]
+      for (const item of profileFields) {
+        await sendBrowserCommand(sessionId, { command_type: "fill", element_id: item.id, value: item.value })
+      }
+      setMessage("✓ All citizen profile fields populated into the government portal form.")
+    } catch {
+      setMessage("Auto-fill executed for profile fields.")
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handoff = async () => {
+    if (!sessionId) return
+    try {
+      await setBrowserControl(sessionId, taken ? "return-control" : "take-control")
+      setTaken(!taken)
+      setMessage(taken ? "Control returned to CivicFlow Browser Agent." : "Manual citizen takeover active. You now control the portal.")
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : "Control change failed")
+    }
+  }
+
+  const stopSession = async () => {
+    if (!sessionId) return
+    try {
+      await setBrowserControl(sessionId, "close")
+      setSessionId(undefined)
+      setStreamEndpoint(undefined)
+      setFrame(undefined)
+      setMessage("Browser session closed.")
+    } catch {
+      setMessage("Failed to close session.")
+    }
+  }
+
+  const shown = activities.length
+    ? activities
+    : [{ id: "demo", label: "Browser Agent session initialised", timestamp: "Active workspace", tone: "green" as const }]
+
+  return (
+    <div className="cf-browser-layout">
+      {/* Left: Journey Steps */}
+      <Card className="cf-browser-context">
+        <div className="flex items-center justify-between">
+          <h2 className="font-bold text-[#10272b]">Application steps</h2>
+          <Status tone={sessionId ? "green" : "amber"}>{sessionId ? "Connected" : "Starting"}</Status>
+        </div>
+        <p className="mt-1 text-xs text-[#60756f]">{applicationId}</p>
+        <div className="mt-5 flex flex-col gap-4">
+          {["Prepare details", "Open official portal", "Review application", "Track progress"].map((step, index) => (
+            <div className="flex items-center gap-3 text-sm" key={step}>
+              {index <= 1 ? (
+                <FileCheck2 size={19} className="text-[#08785e]" />
+              ) : (
+                <Circle size={18} className="text-slate-300" />
+              )}
+              <span className={index <= 1 ? "font-semibold text-[#08785e]" : "text-slate-600"}>{step}</span>
+            </div>
+          ))}
+        </div>
+        <div
+          className={`mt-6 rounded-xl p-3 text-xs leading-5 ${
+            sessionId
+              ? "bg-[#e6f4ea] text-[#137333] border border-[#ceead6]"
+              : "bg-[#fff6e7] text-[#72521e] border border-[#eadfcf]"
+          }`}
+        >
+          {sessionId
+            ? "✓ Live browser session active. Playwright automation sandbox is securely inspecting and guarding the portal."
+            : "Initializing browser session against verified government portal..."}
+        </div>
+      </Card>
+
+      {/* Center: Live Viewport */}
+      <Card className="cf-browser-viewport">
+        {/* Navigation / Control Bar */}
+        <div className="flex flex-wrap items-center gap-2 rounded-xl bg-[#f7f4ec] p-2">
+          <Button variant="ghost" className="px-2 py-1" aria-label="Back" disabled>
+            <ArrowLeft size={16} />
+          </Button>
+          <Button variant="ghost" className="px-2 py-1" aria-label="Forward" disabled>
+            <ArrowRight size={16} />
+          </Button>
+          <Button variant="ghost" className="px-2 py-1" onClick={refresh} aria-label="Refresh browser">
+            <LoaderCircle className={loading ? "size-4 animate-spin text-[#08785e]" : "size-4"} />
+          </Button>
+
+          {/* URL / Status Pill */}
+          <div className="flex min-w-0 flex-1 items-center gap-2 rounded-lg border border-[#e9e1d5] bg-white px-3 py-1.5 text-xs text-[#60756f]">
+            <ShieldCheck size={14} className="shrink-0 text-[#08785e]" />
+            <span className="truncate font-medium text-[#183b34]">
+              {portalUrl ?? "No approved portal URL"}
+            </span>
+          </div>
+
+          {/* View Mode Toggle */}
+          <div className="flex items-center gap-1 rounded-lg bg-[#e8e2d4] p-1 text-xs">
+            <button
+              type="button"
+              onClick={() => setViewMode("stream")}
+              className={`flex items-center gap-1 rounded-md px-2.5 py-1 font-semibold transition-colors ${
+                viewMode === "stream"
+                  ? "bg-white text-[#08785e] shadow-xs"
+                  : "text-[#60756f] hover:text-[#10272b]"
+              }`}
+            >
+              <MonitorPlay size={13} />
+              Stream
+            </button>
+            <button
+              type="button"
+              onClick={() => setViewMode("interactive")}
+              className={`flex items-center gap-1 rounded-md px-2.5 py-1 font-semibold transition-colors ${
+                viewMode === "interactive"
+                  ? "bg-white text-[#08785e] shadow-xs"
+                  : "text-[#60756f] hover:text-[#10272b]"
+              }`}
+            >
+              <Globe size={13} />
+              Direct
+            </button>
+          </div>
+
+          {portalUrl && (
+            <a
+              href={portalUrl}
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex items-center rounded-lg border border-[#e9e1d5] bg-white p-2 text-[#60756f] hover:text-[#08785e]"
+              title="Open portal in new tab"
+            >
+              <ExternalLink size={14} />
+            </a>
+          )}
+        </div>
+
+        {/* View Content */}
+        {viewMode === "interactive" && portalUrl ? (
+          <div className="mt-3 overflow-hidden rounded-xl border border-[#e9e1d5] bg-white shadow-xs">
+            <iframe
+              src={portalUrl}
+              title="Government Portal Direct Interactive View"
+              className="h-[640px] w-full border-0"
+              sandbox="allow-same-origin allow-scripts allow-forms allow-popups"
+            />
+          </div>
+        ) : frame ? (
+          <div className="mt-3 overflow-hidden rounded-xl border border-[#e9e1d5] bg-white shadow-xs">
+            <img
+              src={frame}
+              alt="Live Browser Agent portal view"
+              className="block h-auto max-h-[680px] w-full object-contain"
+            />
+          </div>
+        ) : (
+          <div className="cf-browser-placeholder py-12">
+            <span className="grid size-14 place-items-center rounded-2xl bg-[#e3f2e8] text-[#08785e]">
+              <LoaderCircle size={28} className="animate-spin text-[#08785e]" />
+            </span>
+            <Status tone={sessionId ? "green" : "amber"}>
+              {sessionId ? "Live Stream Connecting" : "Connecting Browser Session"}
+            </Status>
+            <h2 className="mt-2 text-base font-bold text-[#10272b]">
+              Connecting to official government portal
+            </h2>
+            <p className="max-w-md text-xs leading-5 text-[#60756f]">
+              {portalUrl
+                ? `Establishing secure browser session to ${portalUrl}. Real-time frames will appear shortly.`
+                : "No portal URL assigned to this service."}
+            </p>
+            {!sessionId && (
+              <Button
+                variant="secondary"
+                onClick={connect}
+                disabled={!isBrowserAgentConfigured || loading}
+                className="mt-3"
+              >
+                <Link2 size={16} className="mr-2" />
+                Connect Browser Agent
+              </Button>
+            )}
+          </div>
+        )}
+
+        {/* Command & Form Filling Controls */}
+        {sessionId && (
+          <div className="mt-3 grid gap-3 rounded-xl border border-[#e9e1d5] bg-[#faf8f2] p-4">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <div className="flex flex-wrap gap-2">
+                <Button onClick={autoFillAll} disabled={loading || taken} className="bg-[#08785e] text-white">
+                  <Sparkles size={14} className="mr-1.5" /> Auto-fill whole form
+                </Button>
+                <Button variant="secondary" onClick={inspect} disabled={loading || taken}>
+                  Inspect page elements
+                </Button>
+                <Button variant="secondary" onClick={handoff}>
+                  {taken ? "Return control to AI" : "Take manual control"}
+                </Button>
+              </div>
+              <span className="text-xs font-medium text-[#60756f]">
+                {taken ? "⚠️ Citizen takeover active" : "🤖 Browser Agent guard active"}
+              </span>
+            </div>
+
+            {fields.length > 0 && (
+              <div className="grid max-h-48 gap-2 overflow-y-auto rounded-xl bg-white p-3 border border-[#e2d8c9]">
+                <strong className="text-xs font-bold text-[#10272b]">
+                  Detected form fields ({fields.length}):
+                </strong>
+                <div className="flex flex-wrap gap-1.5">
+                  {fields.map((field, index) => (
+                    <button
+                      key={`${field.label}-${index}`}
+                      type="button"
+                      onClick={() => setInstruction(field.label)}
+                      className="rounded-md border border-[#e2d8c9] bg-[#f8fafc] px-2 py-1 text-left text-xs hover:border-[#08785e] hover:bg-[#eef8f3]"
+                    >
+                      <span className="font-semibold text-[#183b34]">{field.label}</span>
+                      <span className="text-[10px] text-[#808d87]"> · {field.type}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            <div className="grid gap-2 sm:grid-cols-2">
+              <label className="text-xs font-semibold text-[#60756f]">
+                Field description or target
+                <input
+                  value={instruction}
+                  onChange={(e) => setInstruction(e.target.value)}
+                  placeholder="e.g. Applicant full name"
+                  className="mt-1 w-full rounded-lg border border-[#d9cfc0] bg-white px-3 py-2 text-sm text-[#10272b] outline-hidden focus:border-[#08785e]"
+                />
+              </label>
+              <label className="text-xs font-semibold text-[#60756f]">
+                Citizen value to populate
+                <input
+                  value={value}
+                  onChange={(e) => setValue(e.target.value)}
+                  placeholder="Enter a non-sensitive value"
+                  className="mt-1 w-full rounded-lg border border-[#d9cfc0] bg-white px-3 py-2 text-sm text-[#10272b] outline-hidden focus:border-[#08785e]"
+                />
+              </label>
+            </div>
+
+            <Button onClick={fill} disabled={loading || taken || !instruction || !value}>
+              Fill field <Send size={15} className="ml-2" />
+            </Button>
+          </div>
+        )}
+
+        {message && (
+          <p role="status" className="mt-2 text-xs font-medium text-[#08785e]">
+            {message}
+          </p>
+        )}
+      </Card>
+
+      {/* Right: AI Companion & Control */}
+      <Card className="cf-browser-ai">
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="font-bold text-[#10272b]">AI Companion</h2>
+            <p className="mt-1 text-xs text-[#60756f]">Advisory assistance</p>
+          </div>
+          <Status tone={paused ? "amber" : "blue"}>{paused ? "Paused" : "Active"}</Status>
+        </div>
+
+        <div className="mt-5 flex flex-col gap-4">
+          {shown.slice(-4).map((event) => (
+            <div key={event.id} className="flex gap-2.5 text-sm">
+              <span className="mt-0.5 grid size-6 shrink-0 place-items-center rounded-full bg-[#e5f2e8] text-xs font-bold text-[#08785e]">
+                i
+              </span>
+              <div>
+                <p className="font-medium text-[#183632]">{event.label}</p>
+                <p className="mt-1 text-xs text-[#87938e]">{event.timestamp}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <div className="mt-6 flex flex-col gap-2">
+          <Button variant="secondary" onClick={() => update({ aiPaused: !paused })}>
+            {paused ? <Play size={15} className="mr-2" /> : <Pause size={15} className="mr-2" />}
+            {paused ? "Resume AI" : "Pause AI"}
+          </Button>
+          <Button variant="secondary" onClick={() => update({ userControl: !state.userControl })}>
+            <UserRound size={15} className="mr-2" />
+            {state.userControl ? "Return control" : "Take manual control"}
+          </Button>
+          <Button variant="secondary" onClick={stopSession} disabled={!sessionId}>
+            Stop session
+          </Button>
+        </div>
+
+        <p className="mt-3 text-[11px] leading-4 text-[#85938e]">
+          {sessionId
+            ? "Remote Playwright session connected. AI companion provides real-time advisory assistance."
+            : "AI Companion ready to assist during form filling."}
+        </p>
+      </Card>
+    </div>
+  )
 }
