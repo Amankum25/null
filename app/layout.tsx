@@ -3,9 +3,8 @@ import type { Metadata, Viewport } from 'next'
 import './globals.css'
 
 export const metadata: Metadata = {
-  title: 'CivicFlow — Public service assistant',
-  description: 'A simpler way to navigate public services, prepare applications and stay in control.',
-  generator: 'v0.app',
+  title: 'CivicFlow — Public services workspace',
+  description: 'Discover public services, prepare applications, and track progress in one clear workspace.',
   icons: {
     icon: [
       {
