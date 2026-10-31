@@ -6,121 +6,20 @@ import { serviceCatalog, type Service } from "@/src/data/serviceCatalog"
 export type ApplicationStatus = "draft" | "prepared" | "validation_complete" | "waiting_for_approval" | "approved_for_submission" | "submission_in_progress" | "submitted" | "failed" | "uncertain"
 export type DocumentStatus = "pending" | "verified"
 export type ReviewState = Record<string, boolean>
-
-export type DocumentItem = { id: string; name: string; type: string; status: DocumentStatus }
+export type DocumentItem = { id: string; name: string; type: string; status: DocumentStatus; size?: number }
 export type ActivityEvent = { id: string; label: string; timestamp: string; tone?: "blue" | "green" | "amber" }
 export type Tracking = { referenceNumber?: string; submittedAt?: string; officialStatus?: string; demoMode: boolean }
-
-export interface Application {
-  id: string
-  serviceId: string
-  userId: string
-  status: ApplicationStatus
-  currentStep: number
-  progress: number
-  formData: { applicantName: string; fatherName: string; income: string; dob: string; category: string }
-  documents: DocumentItem[]
-  reviewState: ReviewState
-  approvalState: "not_started" | "approved" | "declined"
-  tracking: Tracking
-  createdAt: string
-  updatedAt: string
-  activity: ActivityEvent[]
-  selectedScholarship?: string | null
-}
-
-type StoreState = {
-  user: { id: string; name: string; email: string; phone: string; location: string }
-  applications: Record<string, Application>
-  documents: DocumentItem[]
-  selectedApplicationId: string | null
-  chat: { role: "user" | "assistant"; text: string }[]
-  aiPaused: boolean
-  userControl: boolean
-}
-
-type CivicFlowContext = {
-  state: StoreState
-  createApplication: (serviceId: string, options?: { scholarshipId?: string }) => Application | null
-  getApplication: (applicationId: string) => Application | null
-  updateApplication: (applicationId: string, patch: Partial<Application>) => void
-  deleteApplication: (applicationId: string) => void
-  update: (patch: Partial<StoreState>) => void
-}
-
+export interface Application { id: string; serviceId: string; userId: string; status: ApplicationStatus; currentStep: number; progress: number; formData: { applicantName: string; fatherName: string; income: string; dob: string; category: string }; documents: DocumentItem[]; reviewState: ReviewState; approvalState: "not_started" | "approved" | "declined"; tracking: Tracking; createdAt: string; updatedAt: string; activity: ActivityEvent[]; selectedScholarship?: string | null }
+type StoreState = { user: { id: string; name: string; email: string; phone: string; location: string }; applications: Record<string, Application>; documents: DocumentItem[]; selectedApplicationId: string | null; chat: { role: "user" | "assistant"; text: string }[]; aiPaused: boolean; userControl: boolean }
+type CivicFlowContext = { state: StoreState; createApplication: (serviceId: string, options?: { scholarshipId?: string }) => Application | null; getApplication: (applicationId: string) => Application | null; updateApplication: (applicationId: string, patch: Partial<Application>) => void; deleteApplication: (applicationId: string) => void; update: (patch: Partial<StoreState>) => void }
 const defaultForm = { applicantName: "Aarav Patil", fatherName: "Rajesh Patil", income: "₹2,00,000", dob: "12/03/2004", category: "OBC" }
-const initialState: StoreState = {
-  user: { id: "user-aarav-patil", name: "Aarav Patil", email: "aarav@example.com", phone: "+91 98765 43210", location: "Pune, Maharashtra" },
-  applications: {}, documents: [], selectedApplicationId: null,
-  chat: [{ role: "assistant", text: "Hello Aarav. I can help you discover services, check eligibility, and complete applications." }],
-  aiPaused: false, userControl: false,
-}
-
+const initialState: StoreState = { user: { id: "user-aarav-patil", name: "Aarav Patil", email: "aarav@example.com", phone: "+91 98765 43210", location: "Pune, Maharashtra" }, applications: {}, documents: [], selectedApplicationId: null, chat: [{ role: "assistant", text: "Hello Aarav. I can help you discover services, check eligibility, and complete applications." }], aiPaused: false, userControl: false }
 function serviceFor(serviceId: string): Service | undefined { return serviceCatalog.find((service) => service.id === serviceId) }
 function now() { return new Date().toISOString() }
 function createId() { return `app-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}` }
+function reviewComplete(reviewState: ReviewState) { return Object.values(reviewState).length > 0 && Object.values(reviewState).every(Boolean) }
 function initialDocuments(service: Service): DocumentItem[] { return (service.documents ?? []).map((name, index) => ({ id: `${service.id}-doc-${index}`, name, type: "PDF / JPG", status: "pending" })) }
-
-function sanitizePersistedState(value: unknown): StoreState {
-  if (!value || typeof value !== "object") return initialState
-  const candidate = value as Partial<StoreState>
-  return {
-    ...initialState,
-    ...candidate,
-    applications: candidate.applications && typeof candidate.applications === "object" ? candidate.applications as Record<string, Application> : {},
-    chat: Array.isArray(candidate.chat) ? candidate.chat : initialState.chat,
-  }
-}
-
+function sanitizePersistedState(value: unknown): StoreState { if (!value || typeof value !== "object") return initialState; const candidate = value as Partial<StoreState>; return { ...initialState, ...candidate, applications: candidate.applications && typeof candidate.applications === "object" ? candidate.applications as Record<string, Application> : {}, chat: Array.isArray(candidate.chat) ? candidate.chat : initialState.chat } }
 const StoreContext = createContext<CivicFlowContext | null>(null)
-
-export function CivicFlowProvider({ children }: { children: ReactNode }) {
-  const [state, setState] = useState<StoreState>(initialState)
-  const [hydrated, setHydrated] = useState(false)
-
-  useEffect(() => {
-    try {
-      const saved = window.localStorage.getItem("civicflow-demo")
-      if (saved) setState(sanitizePersistedState(JSON.parse(saved)))
-    } catch {
-      window.localStorage.removeItem("civicflow-demo")
-    } finally { setHydrated(true) }
-  }, [])
-
-  useEffect(() => {
-    if (!hydrated) return
-    try { window.localStorage.setItem("civicflow-demo", JSON.stringify(state)) } catch { /* Storage can be unavailable in private browsing. */ }
-  }, [state, hydrated])
-
-  const value = useMemo<CivicFlowContext>(() => ({
-    state,
-    createApplication: (serviceId, options) => {
-      const service = serviceFor(serviceId)
-      if (!service || service.status !== "available") return null
-      const timestamp = now()
-      const id = createId()
-      const application: Application = {
-        id, serviceId, userId: state.user.id, status: "draft", currentStep: 0, progress: 0,
-        formData: { ...defaultForm }, documents: initialDocuments(service),
-        reviewState: Object.fromEntries(["personal", "education", "financial", "documents"].map((key) => [key, false])),
-        approvalState: "not_started", tracking: { demoMode: true }, createdAt: timestamp, updatedAt: timestamp,
-        selectedScholarship: options?.scholarshipId ?? null,
-        activity: [{ id: `${id}-created`, label: "Application draft created", timestamp, tone: "blue" }],
-      }
-      setState((current) => ({ ...current, applications: { ...current.applications, [id]: application }, selectedApplicationId: id }))
-      return application
-    },
-    getApplication: (applicationId) => state.applications[applicationId] ?? null,
-    updateApplication: (applicationId, patch) => setState((current) => {
-      const existing = current.applications[applicationId]
-      if (!existing) return current
-      const updated = { ...existing, ...patch, updatedAt: now() }
-      return { ...current, applications: { ...current.applications, [applicationId]: updated }, selectedApplicationId: applicationId }
-    }),
-    deleteApplication: (applicationId) => setState((current) => { const { [applicationId]: _, ...rest } = current.applications; return { ...current, applications: rest, selectedApplicationId: current.selectedApplicationId === applicationId ? null : current.selectedApplicationId } }),
-    update: (patch) => setState((current) => ({ ...current, ...patch })),
-  }), [state, hydrated])
-
-  return <StoreContext.Provider value={value}>{children}</StoreContext.Provider>
-}
+export function CivicFlowProvider({ children }: { children: ReactNode }) { const [state, setState] = useState<StoreState>(initialState); const [hydrated, setHydrated] = useState(false); useEffect(() => { try { const saved = window.localStorage.getItem("civicflow-demo"); if (saved) setState(sanitizePersistedState(JSON.parse(saved))) } catch { window.localStorage.removeItem("civicflow-demo") } finally { setHydrated(true) } }, []); useEffect(() => { if (!hydrated) return; try { window.localStorage.setItem("civicflow-demo", JSON.stringify(state)) } catch { /* Storage can be unavailable in private browsing. */ } }, [state, hydrated]); const value = useMemo<CivicFlowContext>(() => ({ state, createApplication: (serviceId, options) => { const service = serviceFor(serviceId); if (!service || service.status !== "available") return null; const timestamp = now(); const id = createId(); const application: Application = { id, serviceId, userId: state.user.id, status: "draft", currentStep: 0, progress: 0, formData: { ...defaultForm }, documents: initialDocuments(service), reviewState: Object.fromEntries(["personal", "education", "financial", "documents"].map((key) => [key, false])), approvalState: "not_started", tracking: { demoMode: true }, createdAt: timestamp, updatedAt: timestamp, selectedScholarship: options?.scholarshipId ?? null, activity: [{ id: `${id}-created`, label: "Application draft created", timestamp, tone: "blue" }] }; setState((current) => ({ ...current, applications: { ...current.applications, [id]: application }, selectedApplicationId: id })); return application }, getApplication: (applicationId) => state.applications[applicationId] ?? null, updateApplication: (applicationId, patch) => setState((current) => { const existing = current.applications[applicationId]; if (!existing) return current; const mergedReview = patch.reviewState ?? existing.reviewState; const complete = reviewComplete(mergedReview); const requestedApproval = patch.approvalState === "approved" || patch.status === "approved_for_submission"; const verifiedSubmission = Boolean(patch.tracking?.referenceNumber && patch.tracking?.officialStatus && patch.tracking?.demoMode === false); const nextApproval = requestedApproval && complete ? "approved" : complete ? (patch.approvalState ?? existing.approvalState) : "not_started"; const nextStatus = patch.status === "submitted" && !verifiedSubmission ? (complete && nextApproval === "approved" ? "approved_for_submission" : existing.status === "submitted" ? "uncertain" : existing.status) : requestedApproval && !complete ? existing.status : (patch.status ?? existing.status); const updated = { ...existing, ...patch, reviewState: mergedReview, approvalState: nextApproval, status: nextStatus, updatedAt: now() }; return { ...current, applications: { ...current.applications, [applicationId]: updated }, selectedApplicationId: applicationId } }), deleteApplication: (applicationId) => setState((current) => { const { [applicationId]: _, ...rest } = current.applications; return { ...current, applications: rest, selectedApplicationId: current.selectedApplicationId === applicationId ? null : current.selectedApplicationId } }), update: (patch) => setState((current) => ({ ...current, ...patch })) }), [state, hydrated]); return <StoreContext.Provider value={value}>{children}</StoreContext.Provider> }
 export function useCivicFlow() { const value = useContext(StoreContext); if (!value) throw new Error("useCivicFlow must be used inside CivicFlowProvider"); return value }
